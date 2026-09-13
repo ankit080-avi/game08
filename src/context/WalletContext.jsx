@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { walletService } from '../services/walletService';
+import { walletService } from '../services/walletService.js';
 import { useAuth } from './AuthContext';
 
 const WalletContext = createContext(null);
@@ -10,7 +10,6 @@ export const WalletProvider = ({ children }) => {
 
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [lastNotification, setLastNotification] = useState(null);
 
   const refreshData = useCallback(() => {
@@ -38,56 +37,54 @@ export const WalletProvider = ({ children }) => {
 
   const addCredits = async (amount, description) => {
     if (!user) throw new Error('User must be logged in.');
-    setIsProcessing(true);
-    try {
-      const res = await walletService.addCredits(amount, description, userId);
-      setLastNotification({
-        type: 'success',
-        message: `+${amount} Demo Credits added to your wallet.`
-      });
-      refreshData();
-      return res;
-    } finally {
-      setIsProcessing(false);
-    }
+    const res = await walletService.addCredits(amount, description, userId);
+    setLastNotification({
+      type: 'success',
+      message: `+${amount} Demo Credits added to your wallet.`
+    });
+    refreshData();
+    return res;
   };
 
-  const deductEntryFee = async (gameId, gameTitle, amount) => {
-    if (!user) throw new Error('User must be logged in.');
-    setIsProcessing(true);
-    try {
-      const res = await walletService.deductEntryFee(gameId, gameTitle, amount, userId);
-      setLastNotification({
-        type: 'info',
-        message: `${amount} Demo Credits deducted for ${gameTitle}.`
-      });
-      refreshData();
-      return res;
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const creditReward = async (gameId, gameTitle, amount) => {
-    if (!user) return null;
-    setIsProcessing(true);
-    try {
-      const res = await walletService.creditReward(gameId, gameTitle, amount, userId);
-      if (res) {
-        setLastNotification({
-          type: 'success',
-          message: `Victory! +${amount} Demo Credits awarded!`
-        });
-        refreshData();
-      }
-      return res;
-    } finally {
-      setIsProcessing(false);
-    }
+  const checkBalance = (amount) => {
+    return walletService.checkBalance(amount, userId);
   };
 
   const hasSufficientBalance = (amount) => {
-    return balance >= amount;
+    return walletService.hasSufficientBalance(amount, userId);
+  };
+
+  const createGameSession = (game) => {
+    if (!user) throw new Error('User must be logged in to launch a game.');
+    return walletService.createGameSession({
+      userId,
+      gameId: game.id,
+      gameTitle: game.title,
+      entryFee: game.entryFee
+    });
+  };
+
+  const commitEntryFee = (sessionId) => {
+    const res = walletService.commitEntryFee(sessionId);
+    refreshData();
+    return res;
+  };
+
+  const rollbackGameSession = (sessionId, reason) => {
+    return walletService.rollbackGameSession(sessionId, reason);
+  };
+
+  const creditReward = async (gameId, gameTitle, amount, sessionId = null) => {
+    if (!user) return null;
+    const res = await walletService.creditReward(gameId, gameTitle, amount, userId, sessionId);
+    if (res) {
+      setLastNotification({
+        type: 'success',
+        message: `Victory! +${amount} Demo Credits awarded!`
+      });
+      refreshData();
+    }
+    return res;
   };
 
   return (
@@ -95,13 +92,15 @@ export const WalletProvider = ({ children }) => {
       value={{
         balance,
         transactions,
-        isProcessing,
         lastNotification,
         clearNotification: () => setLastNotification(null),
         addCredits,
-        deductEntryFee,
-        creditReward,
+        checkBalance,
         hasSufficientBalance,
+        createGameSession,
+        commitEntryFee,
+        rollbackGameSession,
+        creditReward,
         refreshWallet: refreshData
       }}
     >

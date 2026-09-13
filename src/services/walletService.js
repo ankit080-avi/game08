@@ -4,17 +4,18 @@
  * 1. Virtual demo credits only. No real currency or payment gateways.
  * 2. Balance can NEVER become negative.
  * 3. Every single balance update MUST generate an immutable transaction record.
- * 4. Concurrent / duplicate operations are guarded with a processing mutex.
+ * 4. Safe 2-phase game entry: Create session -> Initialize Game -> Commit entry fee.
+ * 5. If initialization fails, rollbackGameSession leaves balance completely untouched.
  */
 
 import { storageService, StorageKeys } from './storageService.js';
 
 const WALLET_LISTENERS = new Set();
-let isProcessing = false;
 
 export const TransactionType = {
   CREDIT_ADDED: 'CREDIT_ADDED',
-  ENTRY_FEE: 'ENTRY_FEE',
+  GAME_ENTRY: 'GAME_ENTRY',
+  ENTRY_FEE: 'GAME_ENTRY', // Alias for compatibility
   GAME_REWARD: 'GAME_REWARD',
   DEMO_RESET: 'DEMO_RESET'
 };
@@ -42,6 +43,11 @@ function generateTxnId() {
   return `TXN-${dateStr}-${rand}`;
 }
 
+function generateSessionId() {
+  const rand = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `GSESS-${Date.now().toString().slice(-6)}-${rand}`;
+}
+
 export const walletService = {
   /**
    * Subscribe to wallet changes (balance, transactions)
@@ -57,7 +63,6 @@ export const walletService = {
   getWallet(userId = 'default') {
     const allWallets = storageService.get(StorageKeys.WALLET, {});
     if (!allWallets[userId]) {
-      // First time initialization with initial demo grant
       const initialBalance = DEFAULT_INITIAL_BALANCE;
       const initTxn = {
         id: generateTxnId(),
@@ -80,7 +85,6 @@ export const walletService = {
 
       storageService.set(StorageKeys.WALLET, allWallets);
 
-      // Record transaction
       const allTxns = storageService.get(StorageKeys.TRANSACTIONS, []);
       allTxns.unshift(initTxn);
       storageService.set(StorageKeys.TRANSACTIONS, allTxns);
@@ -98,11 +102,21 @@ export const walletService = {
   },
 
   /**
-   * Check if user has sufficient demo credits
+   * Check whether user has sufficient demo balance
+   */
+  checkBalance(amount, userId = 'default') {
+    const currentBalance = this.getBalance(userId);
+    const required = Number(amount) || 0;
+    const sufficient = currentBalance >= required;
+    const shortage = Math.max(0, required - currentBalance);
+    return { sufficient, currentBalance, shortage };
+  },
+
+  /**
+   * Legacy alias for checking balance
    */
   hasSufficientBalance(amount, userId = 'default') {
-    const balance = this.getBalance(userId);
-    return balance >= amount;
+    return this.checkBalance(amount, userId).sufficient;
   },
 
   /**
@@ -114,13 +128,163 @@ export const walletService = {
   },
 
   /**
+   * STEP 2 OF SAFE LAUNCH:
+   * Create a temporary game session in memory & localStorage.
+   * Does NOT deduct any credits. Does NOT create a transaction.
+   */
+  createGameSession({ userId = 'default', gameId, gameTitle, entryFee }) {
+    const fee = Number(entryFee);
+    if (isNaN(fee) || fee <= 0) {
+      throw new Error('Invalid game entry fee.');
+    }
+
+    const { sufficient, currentBalance, shortage } = this.checkBalance(fee, userId);
+    if (!sufficient) {
+      throw new Error(`Insufficient Demo Credits. Required: ${fee}, Available: ${currentBalance}. (Shortage: ${shortage})`);
+    }
+
+    const sessionId = generateSessionId();
+    const gameSession = {
+      sessionId,
+      gameId,
+      gameTitle: gameTitle || gameId,
+      userId,
+      entryFee: fee,
+      status: 'launching',
+      createdAt: new Date().toISOString(),
+      committedAt: null,
+      transactionId: null
+    };
+
+    const sessions = storageService.get(StorageKeys.GAME_STATE, {});
+    sessions[sessionId] = gameSession;
+    storageService.set(StorageKeys.GAME_STATE, sessions);
+
+    return gameSession;
+  },
+
+  /**
+   * STEP 4 OF SAFE LAUNCH:
+   * Commit entry fee ONLY after game successfully loads.
+   * Implements strict idempotency via sessionId.
+   */
+  commitEntryFee(sessionId) {
+    if (!sessionId) {
+      throw new Error('Invalid session ID for committing entry fee.');
+    }
+
+    const sessions = storageService.get(StorageKeys.GAME_STATE, {});
+    const session = sessions[sessionId];
+
+    if (!session) {
+      throw new Error(`Game session ${sessionId} not found.`);
+    }
+
+    // Idempotency: If already committed, return existing transaction safely
+    if (session.status === 'active' && session.transactionId) {
+      const allTxns = storageService.get(StorageKeys.TRANSACTIONS, []);
+      const existingTxn = allTxns.find((t) => t.id === session.transactionId);
+      return {
+        success: true,
+        alreadyCommitted: true,
+        transaction: existingTxn,
+        balance: this.getBalance(session.userId),
+        session
+      };
+    }
+
+    const userId = session.userId || 'default';
+    const allWallets = storageService.get(StorageKeys.WALLET, {});
+    const currentWallet = this.getWallet(userId);
+    const prevBalance = currentWallet.balance;
+    const fee = session.entryFee;
+
+    if (prevBalance < fee) {
+      // Rollback session
+      this.rollbackGameSession(sessionId, 'Insufficient balance at commit time');
+      throw new Error(`Insufficient Demo Credits at launch confirmation. Balance: ${prevBalance}, Required: ${fee}`);
+    }
+
+    const newBalance = prevBalance - fee;
+    const txnId = generateTxnId();
+
+    const txn = {
+      id: txnId,
+      userId,
+      sessionId: session.sessionId,
+      gameId: session.gameId,
+      type: TransactionType.GAME_ENTRY,
+      amount: -fee,
+      previousBalance: prevBalance,
+      newBalance: newBalance,
+      date: new Date().toISOString(),
+      status: TransactionStatus.COMPLETED,
+      description: `${session.gameTitle} Entry Fee`
+    };
+
+    // Update wallet balance
+    allWallets[userId] = {
+      ...currentWallet,
+      balance: newBalance,
+      updatedAt: new Date().toISOString()
+    };
+    storageService.set(StorageKeys.WALLET, allWallets);
+
+    // Save transaction
+    const allTxns = storageService.get(StorageKeys.TRANSACTIONS, []);
+    allTxns.unshift(txn);
+    storageService.set(StorageKeys.TRANSACTIONS, allTxns);
+
+    // Update session status to active
+    session.status = 'active';
+    session.committedAt = new Date().toISOString();
+    session.transactionId = txnId;
+    sessions[sessionId] = session;
+    storageService.set(StorageKeys.GAME_STATE, sessions);
+
+    notifyListeners({ wallet: allWallets[userId], transactions: allTxns, lastTxn: txn, session });
+
+    return {
+      success: true,
+      balance: newBalance,
+      transaction: txn,
+      session
+    };
+  },
+
+  /**
+   * STEP 5: ROLLBACK ON FAILURE
+   * Removes temporary game session without deducting credits or creating a transaction.
+   */
+  rollbackGameSession(sessionId, reason = 'Game initialization failed') {
+    if (!sessionId) return { rolledBack: false };
+
+    const sessions = storageService.get(StorageKeys.GAME_STATE, {});
+    const session = sessions[sessionId];
+
+    if (!session) return { rolledBack: false };
+
+    // If already active/committed, do not rollback balance here
+    if (session.status === 'active') {
+      return { rolledBack: false, message: 'Session was already committed.' };
+    }
+
+    // Delete temporary launching session
+    delete sessions[sessionId];
+    storageService.set(StorageKeys.GAME_STATE, sessions);
+
+    return {
+      rolledBack: true,
+      sessionId,
+      reason,
+      balanceUntouched: true
+    };
+  },
+
+  /**
    * Add demo credits to the wallet
    */
   async addCredits(amount, description = 'Demo Credit Added', userId = 'default') {
-    if (isProcessing) {
-      throw new Error('A transaction is already in progress. Please wait.');
-    }
-
     const numAmount = Number(amount);
     if (isNaN(numAmount) || !Number.isFinite(numAmount)) {
       throw new Error('Invalid amount format.');
@@ -134,155 +298,76 @@ export const walletService = {
       throw new Error('Demo credit addition is capped at 50,000 per request.');
     }
 
-    isProcessing = true;
-    try {
-      // Slight delay for realistic async state
-      await new Promise((res) => setTimeout(res, 100));
+    const allWallets = storageService.get(StorageKeys.WALLET, {});
+    const currentWallet = this.getWallet(userId);
+    const prevBalance = currentWallet.balance;
+    const newBalance = prevBalance + numAmount;
 
-      const allWallets = storageService.get(StorageKeys.WALLET, {});
-      const currentWallet = this.getWallet(userId);
-      const prevBalance = currentWallet.balance;
-      const newBalance = prevBalance + numAmount;
+    const txn = {
+      id: generateTxnId(),
+      userId,
+      type: TransactionType.CREDIT_ADDED,
+      amount: numAmount,
+      previousBalance: prevBalance,
+      newBalance: newBalance,
+      date: new Date().toISOString(),
+      status: TransactionStatus.COMPLETED,
+      description: description || `Added ${numAmount} Demo Credits`
+    };
 
-      const txn = {
-        id: generateTxnId(),
-        userId,
-        type: TransactionType.CREDIT_ADDED,
-        amount: numAmount,
-        previousBalance: prevBalance,
-        newBalance: newBalance,
-        date: new Date().toISOString(),
-        status: TransactionStatus.COMPLETED,
-        description: description || `Added ${numAmount} Demo Credits`
-      };
+    allWallets[userId] = {
+      ...currentWallet,
+      balance: newBalance,
+      updatedAt: new Date().toISOString()
+    };
+    storageService.set(StorageKeys.WALLET, allWallets);
 
-      allWallets[userId] = {
-        ...currentWallet,
-        balance: newBalance,
-        updatedAt: new Date().toISOString()
-      };
+    const allTxns = storageService.get(StorageKeys.TRANSACTIONS, []);
+    allTxns.unshift(txn);
+    storageService.set(StorageKeys.TRANSACTIONS, allTxns);
 
-      storageService.set(StorageKeys.WALLET, allWallets);
-
-      const allTxns = storageService.get(StorageKeys.TRANSACTIONS, []);
-      allTxns.unshift(txn);
-      storageService.set(StorageKeys.TRANSACTIONS, allTxns);
-
-      notifyListeners({ wallet: allWallets[userId], transactions: allTxns, lastTxn: txn });
-      return { success: true, balance: newBalance, transaction: txn };
-    } finally {
-      isProcessing = false;
-    }
-  },
-
-  /**
-   * Deduct entry fee before launching a game
-   */
-  async deductEntryFee(gameId, gameTitle, entryFee, userId = 'default') {
-    if (isProcessing) {
-      throw new Error('A transaction is currently being processed.');
-    }
-
-    const fee = Number(entryFee);
-    if (isNaN(fee) || fee <= 0) {
-      throw new Error('Invalid game entry fee.');
-    }
-
-    isProcessing = true;
-    try {
-      await new Promise((res) => setTimeout(res, 80));
-
-      const allWallets = storageService.get(StorageKeys.WALLET, {});
-      const currentWallet = this.getWallet(userId);
-      const prevBalance = currentWallet.balance;
-
-      if (prevBalance < fee) {
-        throw new Error(`Insufficient Demo Credits. You need ${fee} Demo Credits, but your balance is ${prevBalance}.`);
-      }
-
-      const newBalance = prevBalance - fee;
-
-      const txn = {
-        id: generateTxnId(),
-        userId,
-        gameId,
-        type: TransactionType.ENTRY_FEE,
-        amount: -fee,
-        previousBalance: prevBalance,
-        newBalance: newBalance,
-        date: new Date().toISOString(),
-        status: TransactionStatus.COMPLETED,
-        description: `${gameTitle || 'Game'} Entry Fee`
-      };
-
-      allWallets[userId] = {
-        ...currentWallet,
-        balance: newBalance,
-        updatedAt: new Date().toISOString()
-      };
-
-      storageService.set(StorageKeys.WALLET, allWallets);
-
-      const allTxns = storageService.get(StorageKeys.TRANSACTIONS, []);
-      allTxns.unshift(txn);
-      storageService.set(StorageKeys.TRANSACTIONS, allTxns);
-
-      notifyListeners({ wallet: allWallets[userId], transactions: allTxns, lastTxn: txn });
-      return { success: true, balance: newBalance, transaction: txn };
-    } finally {
-      isProcessing = false;
-    }
+    notifyListeners({ wallet: allWallets[userId], transactions: allTxns, lastTxn: txn });
+    return { success: true, balance: newBalance, transaction: txn };
   },
 
   /**
    * Credit demo rewards upon winning a game
    */
-  async creditReward(gameId, gameTitle, rewardAmount, userId = 'default') {
-    if (isProcessing) {
-      throw new Error('Transaction in progress.');
-    }
-
+  async creditReward(gameId, gameTitle, rewardAmount, userId = 'default', sessionId = null) {
     const reward = Number(rewardAmount);
     if (isNaN(reward) || reward <= 0) return null;
 
-    isProcessing = true;
-    try {
-      await new Promise((res) => setTimeout(res, 60));
+    const allWallets = storageService.get(StorageKeys.WALLET, {});
+    const currentWallet = this.getWallet(userId);
+    const prevBalance = currentWallet.balance;
+    const newBalance = prevBalance + reward;
 
-      const allWallets = storageService.get(StorageKeys.WALLET, {});
-      const currentWallet = this.getWallet(userId);
-      const prevBalance = currentWallet.balance;
-      const newBalance = prevBalance + reward;
+    const txn = {
+      id: generateTxnId(),
+      userId,
+      gameId,
+      sessionId,
+      type: TransactionType.GAME_REWARD,
+      amount: reward,
+      previousBalance: prevBalance,
+      newBalance: newBalance,
+      date: new Date().toISOString(),
+      status: TransactionStatus.COMPLETED,
+      description: `Victory Reward: ${gameTitle || 'Game'} Demo Win`
+    };
 
-      const txn = {
-        id: generateTxnId(),
-        userId,
-        gameId,
-        type: TransactionType.GAME_REWARD,
-        amount: reward,
-        previousBalance: prevBalance,
-        newBalance: newBalance,
-        date: new Date().toISOString(),
-        status: TransactionStatus.COMPLETED,
-        description: `Victory Reward: ${gameTitle || 'Game'} Demo Win`
-      };
+    allWallets[userId] = {
+      ...currentWallet,
+      balance: newBalance,
+      updatedAt: new Date().toISOString()
+    };
+    storageService.set(StorageKeys.WALLET, allWallets);
 
-      allWallets[userId] = {
-        ...currentWallet,
-        balance: newBalance,
-        updatedAt: new Date().toISOString()
-      };
+    const allTxns = storageService.get(StorageKeys.TRANSACTIONS, []);
+    allTxns.unshift(txn);
+    storageService.set(StorageKeys.TRANSACTIONS, allTxns);
 
-      storageService.set(StorageKeys.WALLET, allWallets);
-
-      const allTxns = storageService.get(StorageKeys.TRANSACTIONS, []);
-      allTxns.unshift(txn);
-      storageService.set(StorageKeys.TRANSACTIONS, allTxns);
-
-      notifyListeners({ wallet: allWallets[userId], transactions: allTxns, lastTxn: txn });
-      return { success: true, balance: newBalance, transaction: txn };
-    } finally {
-      isProcessing = false;
-    }
+    notifyListeners({ wallet: allWallets[userId], transactions: allTxns, lastTxn: txn });
+    return { success: true, balance: newBalance, transaction: txn };
   }
 };

@@ -252,10 +252,10 @@ export const TransactionHistory = ({ onBackToDashboard, onOpenAddCredits }) => {
                             Credit Added
                           </span>
                         )}
-                        {txn.type === TransactionType.ENTRY_FEE && (
+                        {(txn.type === 'GAME_ENTRY' || txn.type === TransactionType.ENTRY_FEE) && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
                             <ArrowUpRight className="w-3 h-3" />
-                            Entry Fee
+                            GAME_ENTRY
                           </span>
                         )}
                         {txn.type === TransactionType.GAME_REWARD && (
@@ -266,7 +266,12 @@ export const TransactionHistory = ({ onBackToDashboard, onOpenAddCredits }) => {
                         )}
                       </td>
                       <td className="py-3.5 px-4 text-slate-200 font-medium">
-                        {txn.description}
+                        <div>{txn.description}</div>
+                        {txn.sessionId && (
+                          <div className="text-[10px] font-mono text-slate-400 mt-0.5">
+                            Session: <span className="text-amber-400">{txn.sessionId}</span>
+                          </div>
+                        )}
                       </td>
                       <td className={`py-3.5 px-4 text-right font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
                         {isPositive ? `+${txn.amount}` : txn.amount}

@@ -6,7 +6,7 @@
 export const GAME_REGISTRY = [
   {
     id: 'ludo',
-    title: 'Ludo Classic Demo',
+    title: 'Ludo Classic',
     shortName: 'Ludo',
     category: 'Board & Strategy',
     entryFee: 100, // Demo credits
@@ -15,9 +15,9 @@ export const GAME_REGISTRY = [
     badge: 'Featured',
     badgeColor: 'amber',
     iconName: 'Dices',
-    description: 'The beloved classic cross-and-circle board game. Roll the dice, move your tokens, and race to the home triangle!',
+    description: 'Classic Ludo experience. Roll the dice, move your tokens, and race to the home triangle!',
     players: '1 Player vs Smart AI',
-    features: ['Interactive 3D Dice', 'Safety Zones', 'Turn Indicators', 'AI Opponent']
+    features: ['Animated 3D Dice', '4 Colored Bases', 'Smart AI Opponent', '180 Credits Win Bonus']
   },
   {
     id: 'tic-tac-toe',
@@ -28,11 +28,11 @@ export const GAME_REGISTRY = [
     winReward: 90,
     status: 'active',
     badge: 'Instant Play',
-    badgeColor: 'emerald',
+    badgeColor: 'cyan',
     iconName: 'Gamepad2',
     description: 'Fast 3x3 tactical grid showdown against an adaptive Bot. Align 3 marks before the timer runs out!',
     players: '1 Player vs Bot',
-    features: ['Quick Rounds', 'Minimax Bot', 'Win Streaks']
+    features: ['Quick Rounds', 'Adaptive Bot', 'Instant Play', '90 Credits Win Bonus']
   },
   {
     id: 'snakes-ladders',
@@ -45,9 +45,9 @@ export const GAME_REGISTRY = [
     badge: 'Coming Soon',
     badgeColor: 'indigo',
     iconName: 'Sparkles',
-    description: 'Climb ladders to the top, steer clear of treacherous snakes, and be the first to reach tile 100.',
+    description: 'Climb the ladders to the top, steer clear of venomous snakes, and be the first to reach tile 100.',
     players: '2-4 Players',
-    features: ['Multiplayer Ready', 'Custom Boards', 'Special Tiles']
+    features: ['Multiplayer Ready', 'Dynamic Board', '100 Tiles', '250 Credits Win Bonus']
   }
 ];
 

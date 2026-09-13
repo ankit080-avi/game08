@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Gamepad2,
   Coins,
@@ -11,12 +11,19 @@ import {
   Sparkles,
   Play,
   Clock,
-  Layers
+  Layers,
+  ShieldAlert,
+  Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useWallet } from '../context/WalletContext';
 import { GAME_REGISTRY } from '../games/registry';
 import { TransactionType } from '../services/walletService';
+import {
+  LudoThumbnail,
+  TicTacToeThumbnail,
+  SnakesLaddersThumbnail
+} from './GameThumbnails';
 
 export const Dashboard = ({
   onSelectGame,
@@ -24,7 +31,8 @@ export const Dashboard = ({
   onViewAllTransactions
 }) => {
   const { user } = useAuth();
-  const { balance, transactions } = useWallet();
+  const { balance, transactions, checkBalance } = useWallet();
+  const [launchingId, setLaunchingId] = useState(null);
 
   const recentTransactions = transactions.slice(0, 5);
   const activeGames = GAME_REGISTRY.filter((g) => g.status === 'active');
@@ -40,6 +48,32 @@ export const Dashboard = ({
       });
     } catch {
       return iso;
+    }
+  };
+
+  const handlePlayClick = (game) => {
+    if (launchingId) return; // Prevent duplicate clicks
+    setLaunchingId(game.id);
+
+    // Call launcher
+    onSelectGame(game);
+
+    // Reset launching flag after short transition
+    setTimeout(() => {
+      setLaunchingId(null);
+    }, 1000);
+  };
+
+  const renderThumbnail = (gameId) => {
+    switch (gameId) {
+      case 'ludo':
+        return <LudoThumbnail />;
+      case 'tic-tac-toe':
+        return <TicTacToeThumbnail />;
+      case 'snakes-ladders':
+        return <SnakesLaddersThumbnail />;
+      default:
+        return <LudoThumbnail />;
     }
   };
 
@@ -102,7 +136,7 @@ export const Dashboard = ({
               </p>
               <p className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5 mt-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span>Operational (Prototype)</span>
+                <span>Operational (Demo)</span>
               </p>
             </div>
           </div>
@@ -116,7 +150,7 @@ export const Dashboard = ({
               <span>Virtual Demo Wallet</span>
             </div>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">
-              No Real Currency
+              No Real Money
             </span>
           </div>
 
@@ -129,7 +163,7 @@ export const Dashboard = ({
               <span className="text-sm font-bold text-slate-400">Demo Credits</span>
             </div>
             <p className="text-[11px] text-slate-500 mt-2">
-              Used exclusively to cover game entry fees during this prototype test.
+              Used exclusively to cover demo game entry fees during this test.
             </p>
           </div>
 
@@ -152,7 +186,7 @@ export const Dashboard = ({
               <span>Available Games</span>
             </h2>
             <p className="text-xs text-slate-400">
-              Select a game below. Entry fee will be verified and deducted from your demo balance.
+              Select a game below. Entry fee is safely verified and deducted only after game arena loads.
             </p>
           </div>
         </div>
@@ -162,113 +196,138 @@ export const Dashboard = ({
           {GAME_REGISTRY.map((game) => {
             const hasFunds = balance >= game.entryFee;
             const isAvailable = game.status === 'active';
+            const isLaunchingThis = launchingId === game.id;
 
             return (
               <div
                 key={game.id}
-                className={`rounded-3xl bg-slate-900 border transition-all duration-300 flex flex-col justify-between overflow-hidden relative shadow-xl ${
+                className={`group rounded-3xl bg-slate-900 border transition-all duration-300 flex flex-col justify-between overflow-hidden relative shadow-xl ${
                   isAvailable
                     ? 'border-slate-800 hover:border-slate-700 hover:shadow-2xl'
-                    : 'border-slate-800/40 opacity-75'
+                    : 'border-slate-800/40 opacity-80'
                 }`}
               >
-                {/* Card Header & Badge */}
-                <div className="p-6">
-                  <div className="flex items-start justify-between gap-2 mb-4">
-                    <span
-                      className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${
-                        game.badgeColor === 'amber'
-                          ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                          : game.badgeColor === 'emerald'
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                          : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
-                      }`}
-                    >
-                      {game.badge}
-                    </span>
-
-                    {/* Status indicator */}
-                    {isAvailable ? (
-                      hasFunds ? (
-                        <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>Ready</span>
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-[11px] font-semibold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
-                          <AlertCircle className="w-3 h-3" />
-                          <span>Insufficient Balance</span>
-                        </span>
-                      )
-                    ) : (
-                      <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">
-                        <Clock className="w-3 h-3" />
-                        <span>In Development</span>
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Title & Description */}
-                  <h3 className="text-xl font-bold text-white mb-1.5">{game.title}</h3>
-                  <p className="text-xs text-slate-400 leading-relaxed mb-4">
-                    {game.description}
-                  </p>
-
-                  {/* Feature Tags */}
-                  <div className="flex flex-wrap gap-1.5 mb-6">
-                    {game.features?.map((f, idx) => (
-                      <span
-                        key={idx}
-                        className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-slate-800/80 text-slate-300"
-                      >
-                        {f}
-                      </span>
-                    ))}
-                  </div>
+                {/* Visual Game Thumbnail at top */}
+                <div className="p-4 pb-0">
+                  {renderThumbnail(game.id)}
                 </div>
 
-                {/* Card Footer with Entry Fee and Action */}
-                <div className="p-6 pt-0">
-                  <div className="p-3 mb-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between">
-                    <div>
-                      <p className="text-[10px] uppercase font-semibold text-slate-500">
-                        Entry Fee
-                      </p>
-                      <p className="text-sm font-extrabold text-amber-400">
-                        {game.entryFee} Demo Credits
-                      </p>
+                {/* Card Body */}
+                <div className="p-6 flex-1 flex flex-col justify-between">
+                  <div>
+                    {/* Status & Badge Row */}
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span
+                        className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full border ${
+                          game.badgeColor === 'amber'
+                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                            : game.badgeColor === 'cyan'
+                            ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                            : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30'
+                        }`}
+                      >
+                        {game.badge}
+                      </span>
+
+                      {/* Ready status vs Insufficient funds */}
+                      {isAvailable ? (
+                        hasFunds ? (
+                          <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>Available</span>
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-[11px] font-semibold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
+                            <AlertCircle className="w-3 h-3" />
+                            <span>Insufficient Balance</span>
+                          </span>
+                        )
+                      ) : (
+                        <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">
+                          <Clock className="w-3 h-3" />
+                          <span>Coming Soon</span>
+                        </span>
+                      )}
                     </div>
 
-                    <div className="text-right">
-                      <p className="text-[10px] uppercase font-semibold text-slate-500">
-                        Win Reward
-                      </p>
-                      <p className="text-sm font-extrabold text-emerald-400">
-                        +{game.winReward} Credits
-                      </p>
+                    {/* Title & Description */}
+                    <h3 className="text-xl font-extrabold text-white tracking-tight mb-1">
+                      {game.title}
+                    </h3>
+                    <p className="text-xs text-slate-400 leading-relaxed mb-4">
+                      {game.description}
+                    </p>
+
+                    {/* Entry Fee Box */}
+                    <div className="p-3 mb-4 rounded-2xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+                          Entry Fee
+                        </p>
+                        <p className="text-sm font-black text-amber-400">
+                          {game.entryFee} Demo Credits
+                        </p>
+                      </div>
+
+                      <div className="text-right">
+                        <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+                          Win Reward
+                        </p>
+                        <p className="text-sm font-black text-emerald-400">
+                          +{game.winReward} Credits
+                        </p>
+                      </div>
                     </div>
+
+                    {/* Prominent PLAY NOW Button */}
+                    <button
+                      onClick={() => handlePlayClick(game)}
+                      disabled={!isAvailable || isLaunchingThis}
+                      className={`w-full py-3.5 px-4 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all shadow-lg ${
+                        !isAvailable
+                          ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-800'
+                          : isLaunchingThis
+                          ? 'bg-amber-600 text-slate-950 cursor-wait opacity-80'
+                          : hasFunds
+                          ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 shadow-amber-500/25 cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0'
+                          : 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 cursor-pointer'
+                      }`}
+                    >
+                      {isLaunchingThis ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                          <span>LAUNCHING...</span>
+                        </>
+                      ) : !isAvailable ? (
+                        <span>COMING SOON</span>
+                      ) : hasFunds ? (
+                        <>
+                          <Play className="w-4 h-4 fill-current stroke-none" />
+                          <span>PLAY NOW</span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="w-4 h-4" />
+                          <span>INSUFFICIENT BALANCE</span>
+                        </>
+                      )}
+                    </button>
                   </div>
 
-                  <button
-                    onClick={() => onSelectGame(game)}
-                    disabled={!isAvailable}
-                    className={`w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                      !isAvailable
-                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-800'
-                        : hasFunds
-                        ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/20'
-                        : 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30'
-                    }`}
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>
-                      {!isAvailable
-                        ? 'Coming Soon'
-                        : hasFunds
-                        ? `Play Demo (${game.entryFee} Credits)`
-                        : `Need ${game.entryFee - balance} More Credits`}
-                    </span>
-                  </button>
+                  {/* Features List */}
+                  <div className="mt-5 pt-4 border-t border-slate-800/80">
+                    <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-2">
+                      Features:
+                    </p>
+                    <ul className="space-y-1 text-xs text-slate-300">
+                      {game.features?.map((f, idx) => (
+                        <li key={idx} className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </div>
             );
@@ -329,6 +388,9 @@ export const Dashboard = ({
                       </p>
                       <p className="text-[11px] text-slate-500 font-mono">
                         {txn.id} • {formatDate(txn.date)}
+                        {txn.sessionId && (
+                          <span className="ml-2 text-slate-400">[{txn.sessionId}]</span>
+                        )}
                       </p>
                     </div>
                   </div>
