@@ -4,11 +4,28 @@ import { useWallet } from '../context/WalletContext';
 import { InsufficientBalanceModal } from '../components/InsufficientBalanceModal';
 import { LudoGame } from './ludo/LudoGame.jsx';
 import { TicTacToeGame } from './ticTacToe/TicTacToeGame.jsx';
+import { CarromGame } from './carrom/CarromGame.jsx';
+import { ChessGame } from './chess/ChessGame.jsx';
+import { PoolGame } from './pool/PoolGame.jsx';
+import { KnifeTargetGame } from './knifeTarget/KnifeTargetGame.jsx';
+import { MinesGame } from './mines/MinesGame.jsx';
+import { RPSGame } from './rps/RPSGame.jsx';
+import { MemoryGame } from './memory/MemoryGame.jsx';
+import { ConnectFourGame } from './connectFour/ConnectFourGame.jsx';
+import { GenericArcadeGame } from './quickArcade/GenericArcadeGame.jsx';
 import { AlertCircle, ArrowLeft, ShieldAlert } from 'lucide-react';
 
 const GAME_COMPONENTS = {
   'ludo': LudoGame,
-  'tic-tac-toe': TicTacToeGame
+  'tic-tac-toe': TicTacToeGame,
+  'carrom': CarromGame,
+  'chess': ChessGame,
+  'pool': PoolGame,
+  'knife-target': KnifeTargetGame,
+  'mines': MinesGame,
+  'rps': RPSGame,
+  'memory': MemoryGame,
+  'connect-four': ConnectFourGame
 };
 
 export const GameWrapper = ({
@@ -36,7 +53,6 @@ export const GameWrapper = ({
   const hasCommittedRef = useRef(false);
 
   useEffect(() => {
-    // Only execute launch sequence once per mount
     if (hasInitiatedRef.current) return;
     hasInitiatedRef.current = true;
 
@@ -59,14 +75,13 @@ export const GameWrapper = ({
         createdSession = createGameSession(game);
         setSession(createdSession);
 
-        // STEP 3: Verify Game Component exists
-        const GameComponent = GAME_COMPONENTS[game.id];
-        if (!GameComponent) {
+        // STEP 3: Verify Game Component resolution
+        const ComponentToLoad = GAME_COMPONENTS[game.id] || GenericArcadeGame;
+        if (!ComponentToLoad) {
           throw new Error(`Game engine for "${game.title}" is currently unavailable.`);
         }
 
-        // STEP 4: Commit entry fee ONLY after game is verified & ready to mount
-        // Idempotency check: ensures exactly one deduction and one transaction
+        // STEP 4: Commit entry fee ONLY after game is verified
         if (!hasCommittedRef.current) {
           hasCommittedRef.current = true;
           const commitResult = commitEntryFee(createdSession.sessionId);
@@ -75,12 +90,11 @@ export const GameWrapper = ({
           }
         }
 
-        // Mark game screen as fully initialized and ready
         setIsGameReady(true);
       } catch (err) {
         console.error('[GameWrapper] Launch sequence failed:', err);
 
-        // STEP 5: Rollback on failure - ZERO deduction, ZERO transaction
+        // STEP 5: Rollback on failure - ZERO deductions
         if (createdSession && createdSession.sessionId && !hasCommittedRef.current) {
           try {
             rollbackGameSession(createdSession.sessionId, err.message);
@@ -127,7 +141,7 @@ export const GameWrapper = ({
     );
   }
 
-  // Graceful Error State - User-Friendly & Clear
+  // Graceful Error State
   if (launchError) {
     return (
       <div className="min-h-[65vh] flex items-center justify-center p-4">
@@ -148,7 +162,7 @@ export const GameWrapper = ({
 
           <button
             onClick={onExit}
-            className="w-full py-3.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center justify-center gap-2 border border-slate-700 transition-all cursor-pointer"
+            className="w-full min-h-[48px] py-3.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center justify-center gap-2 border border-slate-700 transition-all cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Return to Dashboard</span>
@@ -158,14 +172,14 @@ export const GameWrapper = ({
     );
   }
 
-  // Loading / Arena Setup State
+  // Loading Screen
   if (!isGameReady || !session) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-6">
         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 flex items-center justify-center animate-pulse mb-4 shadow-lg shadow-amber-500/10">
           <span className="text-2xl">🎲</span>
         </div>
-        <h3 className="text-lg font-bold text-white mb-1">Initializing Game Arena...</h3>
+        <h3 className="text-lg font-bold text-white mb-1">Loading Arena: {game?.title}...</h3>
         <p className="text-xs text-slate-400">
           Verifying demo balance & allocating secure session
         </p>
@@ -173,10 +187,11 @@ export const GameWrapper = ({
     );
   }
 
-  const GameComponent = GAME_COMPONENTS[game.id];
+  const ActiveComponent = GAME_COMPONENTS[game.id] || GenericArcadeGame;
 
   return (
-    <GameComponent
+    <ActiveComponent
+      game={game}
       onExit={onExit}
       onWin={handleWin}
       user={user}

@@ -178,8 +178,25 @@ async function runTests() {
   assert(canTokenMove({ id: 'r0', steps: 54 }, 2), 'Token at 54 can reach 56');
   assert(!canTokenMove({ id: 'r0', steps: 55 }, 2), 'Token cannot overshoot home');
 
+  console.log(cyan('\n--- 9. 16 Games Registry & Categories Verification ---'));
+  const { GAME_REGISTRY, CATEGORIES, getGameById } = await import('./src/games/registry.js');
+  assert(GAME_REGISTRY.length === 16, `Registry contains all 16 games (got: ${GAME_REGISTRY.length})`);
+  assert(CATEGORIES.includes('Board') && CATEGORIES.includes('Sports') && CATEGORIES.includes('Arcade'), 'Categories include Board, Sports, Arcade');
+
+  const carrom = getGameById('carrom');
+  assert(carrom && carrom.entryFee === 50 && carrom.category === 'Sports', 'Carrom is registered in Sports category with 50 fee');
+
+  const chess = getGameById('chess');
+  assert(chess && chess.entryFee === 60, 'Chess is registered with 60 fee');
+
+  const pool = getGameById('pool');
+  assert(pool && pool.entryFee === 60, '8 Ball Pool is registered with 60 fee');
+
+  const knife = getGameById('knife-target');
+  assert(knife && knife.entryFee === 40, 'Knife Target is registered with 40 fee');
+
   console.log(cyan('\n========================================='));
-  console.log(`All Scenarios Verified!`);
+  console.log(`All 16 Games & Scenarios Verified!`);
   console.log(`Total tests passed: ${passed}`);
   console.log(`Total tests failed: ${failed}`);
   console.log(cyan('=========================================\n'));
