@@ -52,24 +52,35 @@ const MOBILE_CATEGORIES = [
   { id: 'Multiplayer', label: 'Multiplayer' }
 ];
 
+const POPULAR_GAME_IDS = [
+  'ludo',
+  'rummy',
+  'carrom',
+  'chess',
+  'knife-target',
+  'tic-tac-toe',
+  'pool',
+  'snakes-ladders'
+];
+
 const GAME_TILE_STYLES = {
-  'ludo': 'border-blue-500/50 shadow-[0_0_12px_rgba(59,130,246,0.25)]',
-  'rummy': 'border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.25)]',
-  'carrom': 'border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.25)]',
-  'chess': 'border-indigo-500/50 shadow-[0_0_12px_rgba(99,102,241,0.25)]',
-  'knife-target': 'border-rose-500/50 shadow-[0_0_12px_rgba(244,63,94,0.25)]',
-  'tic-tac-toe': 'border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.25)]',
-  'pool': 'border-sky-500/50 shadow-[0_0_12px_rgba(14,165,233,0.25)]',
-  'snakes-ladders': 'border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.25)]',
-  'checkers': 'border-rose-500/50 shadow-[0_0_12px_rgba(244,63,94,0.25)]',
-  'connect-four': 'border-blue-500/50 shadow-[0_0_12px_rgba(59,130,246,0.25)]',
-  'mines': 'border-purple-500/50 shadow-[0_0_12px_rgba(168,85,247,0.25)]',
-  'rps': 'border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.25)]',
-  'memory': 'border-indigo-500/50 shadow-[0_0_12px_rgba(99,102,241,0.25)]',
-  'sudoku': 'border-teal-500/50 shadow-[0_0_12px_rgba(20,184,166,0.25)]',
-  'archery': 'border-yellow-500/50 shadow-[0_0_12px_rgba(234,179,8,0.25)]',
-  'bubble-shooter': 'border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.25)]',
-  'fruit-slice': 'border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
+  'ludo': 'border-[#06b6d4] shadow-[0_0_12px_rgba(6,182,212,0.4)]',
+  'rummy': 'border-[#10b981] shadow-[0_0_12px_rgba(16,185,129,0.4)]',
+  'carrom': 'border-[#f59e0b] shadow-[0_0_12px_rgba(245,158,11,0.4)]',
+  'chess': 'border-[#60a5fa] shadow-[0_0_12px_rgba(96,165,250,0.4)]',
+  'knife-target': 'border-[#f97316] shadow-[0_0_12px_rgba(249,115,22,0.4)]',
+  'tic-tac-toe': 'border-[#38bdf8] shadow-[0_0_12px_rgba(56,189,248,0.4)]',
+  'pool': 'border-[#3b82f6] shadow-[0_0_12px_rgba(59,130,246,0.4)]',
+  'snakes-ladders': 'border-[#0284c7] shadow-[0_0_12px_rgba(2,132,199,0.4)]',
+  'fruit-slice': 'border-[#22c55e] shadow-[0_0_12px_rgba(34,197,94,0.4)]',
+  'bubble-shooter': 'border-[#06b6d4] shadow-[0_0_12px_rgba(6,182,212,0.4)]',
+  'mines': 'border-[#8b5cf6] shadow-[0_0_12px_rgba(139,92,246,0.4)]',
+  'memory': 'border-[#a855f7] shadow-[0_0_12px_rgba(168,85,247,0.4)]',
+  'connect-four': 'border-[#2563eb] shadow-[0_0_12px_rgba(37,99,235,0.4)]',
+  'rps': 'border-[#eab308] shadow-[0_0_12px_rgba(234,179,8,0.4)]',
+  'archery': 'border-[#f59e0b] shadow-[0_0_12px_rgba(245,158,11,0.4)]',
+  'checkers': 'border-[#ef4444] shadow-[0_0_12px_rgba(239,68,68,0.4)]',
+  'sudoku': 'border-[#0ea5e9] shadow-[0_0_12px_rgba(14,165,233,0.4)]'
 };
 
 export const Dashboard = ({
@@ -83,6 +94,10 @@ export const Dashboard = ({
   const [selectedCategory, setSelectedCategory] = useState('All Games');
   const [searchQuery, setSearchQuery] = useState('');
   const [launchingId, setLaunchingId] = useState(null);
+
+  const popularGames = useMemo(() => {
+    return POPULAR_GAME_IDS.map((id) => GAME_REGISTRY.find((g) => g.id === id)).filter(Boolean);
+  }, []);
 
   const recentTransactions = transactions.slice(0, 5);
 
@@ -179,7 +194,7 @@ export const Dashboard = ({
       {/* ========================================================================= */}
       {/* 1. MOBILE GAME LAUNCHER PRESENTATION (< 768px / md:hidden)               */}
       {/* ========================================================================= */}
-      <div className="md:hidden w-full px-3 pt-3 pb-24 pb-[calc(env(safe-area-inset-bottom,0px)+76px)] space-y-3.5 select-none font-sans overflow-x-hidden">
+      <div className="md:hidden w-full px-3 pt-2.5 pb-24 pb-[calc(env(safe-area-inset-bottom,0px)+76px)] space-y-3.5 select-none font-sans overflow-x-hidden">
         
         {/* Horizontal Category Tabs */}
         <div className="w-full overflow-x-auto scrollbar-none flex items-center gap-2 -mx-3 px-3 py-0.5 touch-pan-x">
@@ -204,47 +219,103 @@ export const Dashboard = ({
           })}
         </div>
 
-        {/* Promotional Banner */}
+        {/* Promotional Hero Banner */}
         <div
           onClick={onOpenAddCredits}
-          className="w-full rounded-2xl bg-gradient-to-r from-[#1c083d] via-[#290c56] to-[#1c083d] border border-purple-500/40 p-3 shadow-[0_4px_16px_rgba(109,40,217,0.25)] flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform relative overflow-hidden"
+          className="w-full rounded-2xl bg-gradient-to-r from-[#170433] via-[#2a0c50] to-[#190436] border border-purple-500/50 p-3 shadow-[0_0_16px_rgba(168,85,247,0.3)] flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform relative overflow-hidden"
         >
-          {/* Subtle glow background */}
-          <div className="absolute top-0 right-1/4 w-32 h-32 bg-purple-500/15 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute top-0 right-1/4 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl pointer-events-none" />
 
           {/* Left Trophy Illustration & Text */}
           <div className="flex items-center gap-2.5 relative z-10">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-600 p-0.5 shadow-lg shadow-amber-500/30 flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 p-0.5 shadow-lg shadow-amber-500/30 flex items-center justify-center shrink-0">
               <div className="w-full h-full rounded-[10px] bg-slate-950 flex items-center justify-center text-xl">
                 🏆
               </div>
             </div>
             <div>
               <h3 className="text-sm font-black text-white leading-tight">Play Games</h3>
-              <p className="text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-yellow-400 leading-tight mt-0.5">
+              <p className="text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 leading-tight mt-0.5">
                 Win Virtual Rewards
               </p>
-              <p className="text-[10px] text-purple-200/70 font-medium tracking-wide mt-0.5">
+              <p className="text-[10px] text-purple-200/80 font-medium tracking-wide mt-0.5">
                 Fast • Secure • Exciting
               </p>
             </div>
           </div>
 
           {/* Right Gift & Arrow */}
-          <div className="flex items-center gap-1.5 relative z-10 shrink-0">
+          <div className="flex items-center gap-2 relative z-10 shrink-0">
             <span className="text-2xl animate-bounce">🎁</span>
-            <div className="w-6 h-6 rounded-full bg-purple-500/30 border border-purple-400/40 flex items-center justify-center text-purple-200">
-              <ChevronRight className="w-4 h-4" />
+            <div className="w-7 h-7 rounded-full bg-purple-900/60 border border-purple-500/40 flex items-center justify-center text-white/90">
+              <ChevronRight className="w-4 h-4 stroke-[2.5]" />
             </div>
           </div>
         </div>
 
-        {/* Popular Games Section Header */}
-        <div className="space-y-2.5 pt-0.5">
+        {/* 1. POPULAR GAMES SECTION */}
+        {(selectedCategory === 'All Games' || selectedCategory === 'All' || selectedCategory === 'Popular') && (
+          <div className="space-y-2 pt-0.5">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base leading-none">🔥</span>
+                <h2 className="text-sm font-black text-white tracking-wide">Popular Games</h2>
+              </div>
+              <button
+                onClick={() => setSelectedCategory('Popular')}
+                className="text-xs font-bold text-slate-400 hover:text-amber-400 flex items-center gap-0.5 cursor-pointer"
+              >
+                <span>See All</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* 4-COLUMN COMPACT GAME ART CARD GRID */}
+            <div className="grid grid-cols-4 gap-2.5 min-[410px]:gap-3">
+              {popularGames.map((game) => {
+                const borderGlow = GAME_TILE_STYLES[game.id] || 'border-[#f59e0b] shadow-[0_0_12px_rgba(245,158,11,0.35)]';
+                const isLaunchingThis = launchingId === game.id;
+
+                return (
+                  <button
+                    key={`popular-${game.id}`}
+                    onClick={() => handlePlayClick(game)}
+                    disabled={isLaunchingThis}
+                    className="group flex flex-col items-center cursor-pointer active:scale-95 transition-transform select-none w-full"
+                    title={game.title}
+                  >
+                    {/* Square Game Tile with colorful border & glow */}
+                    <div
+                      className={`w-full aspect-square rounded-2xl overflow-hidden border-[2px] relative shadow-lg ${borderGlow} flex items-center justify-center p-0 bg-slate-950`}
+                    >
+                      {isLaunchingThis ? (
+                        <div className="absolute inset-0 bg-slate-950/80 flex items-center justify-center z-20">
+                          <Loader2 className="w-6 h-6 text-amber-400 animate-spin" />
+                        </div>
+                      ) : (
+                        renderThumbnail(game.id, true)
+                      )}
+                    </div>
+
+                    {/* Clean Centered Game Name */}
+                    <span className="mt-1 text-[11px] font-bold text-slate-200 text-center truncate max-w-full leading-tight group-hover:text-white">
+                      {game.shortName || game.title}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 2. ALL GAMES SECTION (or Selected Category Games) */}
+        <div className="space-y-2 pt-1">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-1.5">
-              <span className="text-base leading-none">🔥</span>
-              <h2 className="text-sm font-black text-white tracking-wide">Popular Games</h2>
+              <span className="text-base leading-none">🎮</span>
+              <h2 className="text-sm font-black text-white tracking-wide">
+                {selectedCategory === 'All Games' || selectedCategory === 'All' ? 'All Games' : `${selectedCategory} Games`}
+              </h2>
             </div>
             <button
               onClick={() => setSelectedCategory('All Games')}
@@ -255,26 +326,26 @@ export const Dashboard = ({
             </button>
           </div>
 
-          {/* 4-COLUMN COMPACT GAME ICON GRID */}
+          {/* 4-COLUMN COMPACT GAME ART CARD GRID */}
           <div className="grid grid-cols-4 gap-2.5 min-[410px]:gap-3">
             {filteredGames.map((game) => {
-              const borderGlow = GAME_TILE_STYLES[game.id] || 'border-slate-700/60 shadow-[0_0_10px_rgba(245,158,11,0.2)]';
+              const borderGlow = GAME_TILE_STYLES[game.id] || 'border-[#f59e0b] shadow-[0_0_12px_rgba(245,158,11,0.35)]';
               const isLaunchingThis = launchingId === game.id;
 
               return (
                 <button
-                  key={game.id}
+                  key={`all-${game.id}`}
                   onClick={() => handlePlayClick(game)}
                   disabled={isLaunchingThis}
                   className="group flex flex-col items-center cursor-pointer active:scale-95 transition-transform select-none w-full"
                   title={game.title}
                 >
-                  {/* Square Game Tile */}
+                  {/* Square Game Tile with colorful border & glow */}
                   <div
-                    className={`w-full aspect-square rounded-2xl overflow-hidden bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950 border relative p-1 flex items-center justify-center ${borderGlow}`}
+                    className={`w-full aspect-square rounded-2xl overflow-hidden border-[2px] relative shadow-lg ${borderGlow} flex items-center justify-center p-0 bg-slate-950`}
                   >
                     {isLaunchingThis ? (
-                      <div className="flex flex-col items-center justify-center">
+                      <div className="absolute inset-0 bg-slate-950/80 flex items-center justify-center z-20">
                         <Loader2 className="w-6 h-6 text-amber-400 animate-spin" />
                       </div>
                     ) : (
@@ -282,8 +353,8 @@ export const Dashboard = ({
                     )}
                   </div>
 
-                  {/* Clean Game Name Beneath Tile */}
-                  <span className="mt-1.5 text-[11px] font-bold text-slate-200 text-center truncate max-w-full leading-tight group-hover:text-white">
+                  {/* Clean Centered Game Name */}
+                  <span className="mt-1 text-[11px] font-bold text-slate-200 text-center truncate max-w-full leading-tight group-hover:text-white">
                     {game.shortName || game.title}
                   </span>
                 </button>
@@ -292,25 +363,29 @@ export const Dashboard = ({
           </div>
         </div>
 
-        {/* DAILY REWARDS BANNER (Bottom Banner matching reference) */}
+        {/* 3. DAILY REWARDS BANNER (Bottom Banner matching reference) */}
         <div
           onClick={onOpenAddCredits}
-          className="w-full rounded-2xl bg-gradient-to-r from-[#20102b] via-[#2c133a] to-[#1a0c24] border border-amber-500/30 p-3 shadow-md flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform"
+          className="w-full rounded-2xl bg-gradient-to-r from-[#1a0a22] via-[#2d1130] to-[#1a0a22] border border-amber-500/40 p-3 shadow-[0_0_12px_rgba(245,158,11,0.2)] flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform"
         >
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-xl shrink-0">
-              👑
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 p-0.5 shadow-md flex items-center justify-center shrink-0">
+              <div className="w-full h-full rounded-[10px] bg-slate-950 flex items-center justify-center text-xl">
+                👑
+              </div>
             </div>
             <div>
-              <h4 className="text-xs font-black text-amber-300">Daily Rewards</h4>
-              <p className="text-[10px] text-slate-400">Play more games and win more!</p>
+              <h4 className="text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-yellow-400">
+                Daily Rewards
+              </h4>
+              <p className="text-[10px] text-purple-200/70 font-medium">Play more games and win more!</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-xl">🪙</span>
-            <div className="w-6 h-6 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300">
-              <ChevronRight className="w-3.5 h-3.5" />
+            <div className="w-7 h-7 rounded-full bg-[#4a1222] border border-amber-500/30 flex items-center justify-center text-amber-300">
+              <ChevronRight className="w-4 h-4 stroke-[2.5]" />
             </div>
           </div>
         </div>

@@ -151,11 +151,11 @@ export const Navbar = ({ currentView, onChangeView, onOpenAddCredits, onOpenRese
             <div className="flex items-center gap-2.5">
               <button
                 onClick={() => setMobileDrawerOpen(true)}
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 p-0.5 shadow-md flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
+                className="w-9 h-9 rounded-full bg-slate-800 border border-slate-700/80 shadow-md flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
                 title="Profile & Menu"
               >
-                <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center text-xs font-black text-indigo-300">
-                  {user?.fullName ? user.fullName.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
+                <div className="w-full h-full rounded-full flex items-center justify-center text-xs font-black text-slate-200">
+                  {user?.fullName ? user.fullName.charAt(0).toUpperCase() : <User className="w-4 h-4 text-slate-300" />}
                 </div>
               </button>
 
@@ -174,14 +174,14 @@ export const Navbar = ({ currentView, onChangeView, onOpenAddCredits, onOpenRese
                 {/* Credit / Wallet Balance Pill with '+' button */}
                 <button
                   onClick={onOpenAddCredits}
-                  className="flex items-center gap-1.5 pl-2.5 pr-1 py-1 rounded-full bg-slate-900 border border-amber-500/40 shadow-sm cursor-pointer active:scale-95 transition-transform"
+                  className="flex items-center gap-1.5 pl-2.5 pr-1 py-1 rounded-full bg-[#0c1322] border border-slate-800/90 shadow-sm cursor-pointer active:scale-95 transition-transform"
                   title="Add Demo Credits"
                 >
                   <span className="text-sm leading-none">🪙</span>
-                  <span className="text-xs font-black text-amber-300 tracking-wide leading-none">
+                  <span className="text-xs font-black text-amber-400 tracking-wide leading-none">
                     {balance.toLocaleString()}
                   </span>
-                  <div className="w-5 h-5 rounded-full bg-emerald-500 hover:bg-emerald-400 flex items-center justify-center text-slate-950 ml-0.5">
+                  <div className="w-5 h-5 rounded-full bg-emerald-500 hover:bg-emerald-400 flex items-center justify-center text-slate-950 font-bold ml-0.5">
                     <Plus className="w-3.5 h-3.5 stroke-[3]" />
                   </div>
                 </button>
@@ -189,7 +189,7 @@ export const Navbar = ({ currentView, onChangeView, onOpenAddCredits, onOpenRese
                 {/* Notification / Menu Bell */}
                 <button
                   onClick={() => setMobileDrawerOpen(true)}
-                  className="relative w-9 h-9 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-300 hover:text-white cursor-pointer active:scale-95 transition-transform"
+                  className="relative w-9 h-9 rounded-full bg-[#0c1322] border border-slate-800/90 flex items-center justify-center text-slate-300 hover:text-white cursor-pointer active:scale-95 transition-transform"
                   aria-label="Open Navigation Menu"
                 >
                   <Bell className="w-4 h-4" />
