@@ -1,4 +1,7 @@
 import React from 'react';
+import knifeLogo from '../assets/games/knife-rain/logo.png';
+import knifeDefault from '../assets/games/knife-rain/knife_default.png';
+import appleImg from '../assets/games/knife-rain/apple.png';
 
 /**
  * 100% Offline, Local SVG/CSS Game Visuals for all 16 Games.
@@ -226,13 +229,13 @@ export const KnifeTargetThumbnail = () => (
   <CardWrapper glowColor="amber">
     <div className="relative w-full h-full flex flex-col items-center justify-center">
       <img
-        src="/games/knife-rain/logo.png"
+        src={knifeLogo}
         alt="Knife Rain"
         className="w-28 sm:w-32 h-auto object-contain filter drop-shadow-lg mb-1 group-hover:scale-105 transition-transform"
       />
       <div className="flex items-center gap-2">
-        <img src="/games/knife-rain/knife_default.png" alt="" className="w-4 h-11 object-contain -rotate-12 drop-shadow" />
-        <img src="/games/knife-rain/apple.png" alt="" className="w-5 h-6 object-contain drop-shadow" />
+        <img src={knifeDefault} alt="" className="w-4 h-11 object-contain -rotate-12 drop-shadow" />
+        <img src={appleImg} alt="" className="w-5 h-6 object-contain drop-shadow" />
       </div>
     </div>
     <div className="absolute bottom-2 right-2.5 bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
