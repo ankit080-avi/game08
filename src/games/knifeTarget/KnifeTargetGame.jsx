@@ -17,6 +17,19 @@ import { levelManager } from './LevelManager';
 import { ParticleManager } from './ParticleManager';
 import { GameRenderer } from './GameRenderer';
 
+const BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL)
+  ? import.meta.env.BASE_URL
+  : '/';
+const BASE = BASE_URL.endsWith('/') ? BASE_URL : `${BASE_URL}/`;
+
+const KNIFE_ASSETS = {
+  bossSkull: `${BASE}games/knife-rain/boss_skull.png`,
+  apple: `${BASE}games/knife-rain/apple.png`,
+  knifeIcon: `${BASE}games/knife-rain/knife_icon.png`,
+  logo: `${BASE}games/knife-rain/logo.png`,
+  btnPlay: `${BASE}games/knife-rain/btn_play.png`,
+};
+
 // Virtual portrait canvas dimensions
 const CANVAS_WIDTH = 380;
 const CANVAS_HEIGHT = 600;
@@ -483,7 +496,7 @@ export const KnifeTargetGame = ({
                             }`}
                           >
                             <img
-                              src="/games/knife-rain/boss_skull.png"
+                              src={KNIFE_ASSETS.bossSkull}
                               alt="Boss"
                               className="w-4 h-4 object-contain"
                             />
@@ -511,7 +524,7 @@ export const KnifeTargetGame = ({
               {/* Top Right: Apple Counter */}
               <div className="flex items-center gap-1.5 bg-slate-950/60 backdrop-blur-sm px-2.5 py-1 rounded-full border border-slate-700/50 shadow-md">
                 <img
-                  src="/games/knife-rain/apple.png"
+                  src={KNIFE_ASSETS.apple}
                   alt="Apples"
                   className="w-4 h-4 object-contain"
                 />
@@ -537,7 +550,7 @@ export const KnifeTargetGame = ({
                     }`}
                   >
                     <img
-                      src="/games/knife-rain/knife_icon.png"
+                      src={KNIFE_ASSETS.knifeIcon}
                       alt="Knife"
                       className="w-full h-full object-contain"
                     />
@@ -577,7 +590,7 @@ export const KnifeTargetGame = ({
               {/* Authentic Knife Rain Logo */}
               <div className="w-64 max-w-full mb-6 filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.8)] animate-bounce">
                 <img
-                  src="/games/knife-rain/logo.png"
+                  src={KNIFE_ASSETS.logo}
                   alt="Knife Rain"
                   className="w-full h-auto object-contain"
                 />
@@ -593,7 +606,7 @@ export const KnifeTargetGame = ({
                 </div>
                 <div className="flex items-center justify-between text-xs text-slate-400 mb-1.5">
                   <span className="flex items-center gap-1 font-semibold">
-                    <img src="/games/knife-rain/apple.png" alt="" className="w-3.5 h-3.5" /> Apples:
+                    <img src={KNIFE_ASSETS.apple} alt="" className="w-3.5 h-3.5 object-contain" /> Apples:
                   </span>
                   <span className="font-mono font-bold text-rose-400 text-sm">{applesCount}</span>
                 </div>
@@ -611,11 +624,11 @@ export const KnifeTargetGame = ({
                   e.stopPropagation();
                   startNewGame();
                 }}
-                className="w-44 max-w-full hover:scale-105 active:scale-95 transition-all filter drop-shadow-[0_8px_20px_rgba(34,197,94,0.5)] cursor-pointer"
+                className="w-44 max-w-full min-h-[50px] hover:scale-105 active:scale-95 transition-all filter drop-shadow-[0_8px_20px_rgba(34,197,94,0.5)] cursor-pointer flex items-center justify-center"
                 aria-label="Play Knife Rain"
               >
                 <img
-                  src="/games/knife-rain/btn_play.png"
+                  src={KNIFE_ASSETS.btnPlay}
                   alt="Play"
                   className="w-full h-auto object-contain"
                 />
@@ -696,7 +709,7 @@ export const KnifeTargetGame = ({
                 <div className="flex justify-between text-slate-400">
                   <span>Apples:</span>
                   <span className="font-mono font-bold text-rose-400 flex items-center gap-1">
-                    <img src="/games/knife-rain/apple.png" alt="" className="w-3 h-3" />
+                    <img src={KNIFE_ASSETS.apple} alt="" className="w-3 h-3 object-contain" />
                     {applesCount}
                   </span>
                 </div>
@@ -708,10 +721,10 @@ export const KnifeTargetGame = ({
                     e.stopPropagation();
                     handleRestart();
                   }}
-                  className="w-40 hover:scale-105 active:scale-95 transition-all filter drop-shadow-[0_6px_16px_rgba(34,197,94,0.5)] cursor-pointer"
+                  className="w-40 min-h-[46px] hover:scale-105 active:scale-95 transition-all filter drop-shadow-[0_6px_16px_rgba(34,197,94,0.5)] cursor-pointer flex items-center justify-center"
                 >
                   <img
-                    src="/games/knife-rain/btn_play.png"
+                    src={KNIFE_ASSETS.btnPlay}
                     alt="Play Again"
                     className="w-full h-auto object-contain"
                   />

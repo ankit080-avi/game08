@@ -5,6 +5,11 @@
  * glowing trails, and atmospheric forest backgrounds.
  */
 
+const BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL)
+  ? import.meta.env.BASE_URL
+  : '/';
+const BASE = BASE_URL.endsWith('/') ? BASE_URL : `${BASE_URL}/`;
+
 export class GameRenderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -18,14 +23,14 @@ export class GameRenderer {
 
   loadAssets() {
     const assetSources = {
-      background: '/games/knife-rain/background.jpg',
-      knife: '/games/knife-rain/knife_default.png',
-      targetWood: '/games/knife-rain/target_wood.png',
-      targetBossRobot: '/games/knife-rain/target_boss_robot.png',
-      apple: '/games/knife-rain/apple.png',
-      applePieceLeft: '/games/knife-rain/apple_piece_left.png',
-      applePieceRight: '/games/knife-rain/apple_piece_right.png',
-      targetPiece: '/games/knife-rain/target_piece_1.png'
+      background: `${BASE}games/knife-rain/background.jpg`,
+      knife: `${BASE}games/knife-rain/knife_default.png`,
+      targetWood: `${BASE}games/knife-rain/target_wood.png`,
+      targetBossRobot: `${BASE}games/knife-rain/target_boss_robot.png`,
+      apple: `${BASE}games/knife-rain/apple.png`,
+      applePieceLeft: `${BASE}games/knife-rain/apple_piece_left.png`,
+      applePieceRight: `${BASE}games/knife-rain/apple_piece_right.png`,
+      targetPiece: `${BASE}games/knife-rain/target_piece_1.png`
     };
 
     let loadedCount = 0;

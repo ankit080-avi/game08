@@ -4,21 +4,26 @@
  * Includes Web Audio API synthesizer fallback if audio files or autoplay are blocked.
  */
 
+const BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL)
+  ? import.meta.env.BASE_URL
+  : '/';
+const BASE = BASE_URL.endsWith('/') ? BASE_URL : `${BASE_URL}/`;
+
 class SoundService {
   constructor() {
     this.ctx = null;
     this.muted = false;
     this.audioCache = {};
     this.soundUrls = {
-      throw: '/games/knife-rain/sounds/throw.m4a',
-      hit: '/games/knife-rain/sounds/hit.m4a',
-      clash: '/games/knife-rain/sounds/hit-knife.m4a',
-      apple: '/games/knife-rain/sounds/hit-apple.m4a',
-      shatter: '/games/knife-rain/sounds/target-pop.m4a',
-      gameOver: '/games/knife-rain/sounds/game-over.m4a',
-      levelUp: '/games/knife-rain/sounds/level-up.m4a',
-      bossStart: '/games/knife-rain/sounds/boss-start.m4a',
-      button: '/games/knife-rain/sounds/button.m4a'
+      throw: `${BASE}games/knife-rain/sounds/throw.m4a`,
+      hit: `${BASE}games/knife-rain/sounds/hit.m4a`,
+      clash: `${BASE}games/knife-rain/sounds/hit-knife.m4a`,
+      apple: `${BASE}games/knife-rain/sounds/hit-apple.m4a`,
+      shatter: `${BASE}games/knife-rain/sounds/target-pop.m4a`,
+      gameOver: `${BASE}games/knife-rain/sounds/game-over.m4a`,
+      levelUp: `${BASE}games/knife-rain/sounds/level-up.m4a`,
+      bossStart: `${BASE}games/knife-rain/sounds/boss-start.m4a`,
+      button: `${BASE}games/knife-rain/sounds/button.m4a`
     };
 
     this.preloadSounds();
