@@ -419,12 +419,12 @@ export const KnifeTargetGame = ({
   }, [initLevel]);
 
   return (
-    <div className="w-full max-w-md mx-auto min-h-[640px] flex flex-col items-center justify-center p-2 select-none">
+    <div className="w-full h-[100dvh] max-h-[100dvh] md:h-auto md:min-h-[640px] md:max-w-md mx-auto flex flex-col items-center justify-between select-none overflow-hidden pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]">
       {/* Knife Rain Outer Shell */}
-      <div className="relative w-full max-w-[390px] rounded-3xl bg-[#040e16] border-2 border-slate-800/80 shadow-2xl overflow-hidden flex flex-col">
+      <div className="relative w-full h-full flex-1 flex flex-col justify-between bg-[#040e16] md:max-w-[390px] md:rounded-3xl md:border-2 md:border-slate-800/80 md:shadow-2xl overflow-hidden">
         
         {/* Top Header Utilities (Mute, Session ID, Exit) */}
-        <div className="flex items-center justify-between px-3 py-2 bg-slate-950/70 border-b border-slate-800/60 z-20">
+        <div className="flex items-center justify-between px-3.5 py-2 bg-slate-950/70 border-b border-slate-800/60 z-20 shrink-0">
           <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-mono">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-slate-300 font-semibold">{session?.sessionId || 'GSESS-KNIFE'}</span>
@@ -433,17 +433,17 @@ export const KnifeTargetGame = ({
           <div className="flex items-center gap-1.5">
             <button
               onClick={handleToggleMute}
-              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition cursor-pointer min-h-[34px] min-w-[34px] flex items-center justify-center"
+              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
               title={isMuted ? 'Unmute Sound' : 'Mute Sound'}
             >
-              {isMuted ? <VolumeX className="w-3.5 h-3.5 text-rose-400" /> : <Volume2 className="w-3.5 h-3.5 text-slate-200" />}
+              {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-slate-200" />}
             </button>
 
             <button
               onClick={onExit}
-              className="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-bold transition cursor-pointer min-h-[34px] flex items-center gap-1"
+              className="px-3 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-bold transition cursor-pointer min-h-[36px] flex items-center gap-1"
             >
-              <LogOut className="w-3 h-3" />
+              <LogOut className="w-3.5 h-3.5" />
               <span>Exit</span>
             </button>
           </div>
@@ -453,14 +453,14 @@ export const KnifeTargetGame = ({
         <div
           onClick={handleInteraction}
           onTouchStart={handleInteraction}
-          className="relative w-full aspect-[380/600] max-h-[600px] bg-[#03111c] flex items-center justify-center cursor-pointer overflow-hidden touch-manipulation"
+          className="relative flex-1 w-full min-h-0 bg-[#03111c] flex items-center justify-center cursor-pointer overflow-hidden touch-none"
         >
           {/* Main 60FPS HTML5 Canvas */}
           <canvas
             ref={canvasRef}
             width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
-            className="w-full h-full object-contain"
+            className="w-full h-full max-h-full max-w-full object-contain"
           />
 
           {/* ========================================================== */}

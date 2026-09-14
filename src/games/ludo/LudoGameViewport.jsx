@@ -55,19 +55,12 @@ export const LudoGameViewport = ({
       <LudoGameBackground variant="desktop" />
 
       {/* ========================================================= */}
-      {/* 2. CENTERED PORTRAIT MOBILE-SHAPED GAME VIEWPORT (9:16)   */}
+      {/* 2. CENTERED PORTRAIT MOBILE-SHAPED GAME VIEWPORT          */}
       {/* ========================================================= */}
       <div
         ref={viewportRef}
         id="ludo-game-viewport"
-        style={{
-          aspectRatio: '9 / 16',
-          width: 'min(100vw, calc(100dvh * 9 / 16), 540px)',
-          height: 'min(100dvh, calc(100vw * 16 / 9), 960px)',
-          maxWidth: '100vw',
-          maxHeight: '100dvh'
-        }}
-        className={`relative flex flex-col justify-between overflow-hidden bg-[#091b46] md:rounded-3xl md:border md:border-amber-500/30 shadow-[0_0_60px_rgba(0,0,0,0.95),0_0_30px_rgba(30,58,138,0.4)] transition-all ${className}`}
+        className={`relative flex flex-col justify-between overflow-hidden bg-[#091b46] w-full h-full max-h-[100dvh] pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)] md:aspect-[9/16] md:w-[min(100vw,calc(100dvh*9/16),540px)] md:h-[min(100dvh,calc(100vw*16/9),960px)] md:rounded-3xl md:border md:border-amber-500/30 md:p-0 shadow-[0_0_60px_rgba(0,0,0,0.95),0_0_30px_rgba(30,58,138,0.4)] transition-all ${className}`}
       >
         {/* Internal rich game wallpaper pattern */}
         <LudoGameBackground variant="viewport" />

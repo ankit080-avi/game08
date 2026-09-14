@@ -68,8 +68,8 @@ export const MemoryGame = ({ onExit, onWin, user, session, entryFee = 35 }) => {
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto px-3 sm:px-6 py-4">
-      <div className="flex items-center justify-between p-3.5 mb-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl">
+    <div className="w-full h-[100dvh] max-h-[100dvh] md:h-auto md:max-w-lg mx-auto flex flex-col justify-between p-3 select-none overflow-hidden overscroll-none touch-manipulation pt-[env(safe-area-inset-top,10px)] pb-[env(safe-area-inset-bottom,10px)] pl-[env(safe-area-inset-left,10px)] pr-[env(safe-area-inset-right,10px)]">
+      <div className="flex items-center justify-between p-3.5 mb-2 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-xl">
             🧠
@@ -92,31 +92,33 @@ export const MemoryGame = ({ onExit, onWin, user, session, entryFee = 35 }) => {
         </div>
       </div>
 
-      <div className="rounded-3xl bg-slate-900 border border-slate-800 p-5 shadow-2xl flex flex-col items-center">
-        <div className="w-full flex items-center justify-between px-2 mb-4 text-xs font-bold">
+      <div className="flex-1 min-h-0 rounded-3xl bg-slate-900 border border-slate-800 p-3 sm:p-5 shadow-2xl flex flex-col items-center justify-between">
+        <div className="w-full flex items-center justify-between px-2 mb-2 text-xs font-bold shrink-0">
           <div>Pairs Found: <span className="text-emerald-400 text-sm">{matchedPairs} / 6</span></div>
           <div>Moves: <span className="text-amber-400 text-sm">{moves}</span></div>
         </div>
 
         {/* 4x3 Card Grid */}
-        <div className="grid grid-cols-4 gap-2.5 w-full max-w-[340px] p-2 bg-slate-950 rounded-2xl border border-slate-800">
-          {cards.map((card, idx) => (
-            <button
-              key={card.id}
-              onClick={() => handleCardClick(idx)}
-              disabled={card.isFlipped || card.isMatched || gameOver}
-              className={`aspect-square rounded-xl flex items-center justify-center text-2xl font-black transition-all duration-200 cursor-pointer select-none ${
-                card.isFlipped || card.isMatched
-                  ? 'bg-indigo-600 text-white shadow-lg'
-                  : 'bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 text-slate-500'
-              }`}
-            >
-              {card.isFlipped || card.isMatched ? card.emoji : '?'}
-            </button>
-          ))}
+        <div className="flex-1 min-h-0 w-full flex items-center justify-center">
+          <div className="grid grid-cols-4 gap-2 sm:gap-2.5 w-full max-w-[340px] p-2 bg-slate-950 rounded-2xl border border-slate-800">
+            {cards.map((card, idx) => (
+              <button
+                key={card.id}
+                onClick={() => handleCardClick(idx)}
+                disabled={card.isFlipped || card.isMatched || gameOver}
+                className={`aspect-square rounded-xl flex items-center justify-center text-2xl font-black transition-all duration-200 cursor-pointer select-none ${
+                  card.isFlipped || card.isMatched
+                    ? 'bg-indigo-600 text-white shadow-lg'
+                    : 'bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 text-slate-500'
+                }`}
+              >
+                {card.isFlipped || card.isMatched ? card.emoji : '?'}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="w-full text-center mt-4 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-semibold text-slate-300">
+        <div className="w-full text-center mt-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-semibold text-slate-300 shrink-0">
           {gameOver ? 'All pairs matched! Victory reward credited.' : 'Tap any two cards to test your memory!'}
         </div>
       </div>

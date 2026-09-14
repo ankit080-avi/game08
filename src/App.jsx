@@ -67,23 +67,37 @@ export const App = () => {
     setActiveGame(null);
   };
 
-  return (
-    <div className="min-h-screen flex flex-col bg-[#070a13] text-slate-100 selection:bg-amber-500 selection:text-slate-950 font-sans">
-      {/* Top Demo Disclaimer Notice */}
-      <DemoDisclaimerBanner />
+  // Toggle body lock when game is active to eliminate bounce and scroll on mobile
+  useEffect(() => {
+    if (currentView === 'game' && activeGame) {
+      document.body.classList.add('game-active');
+    } else {
+      document.body.classList.remove('game-active');
+    }
+    return () => {
+      document.body.classList.remove('game-active');
+    };
+  }, [currentView, activeGame]);
 
-      {/* Main Navigation Bar */}
-      <Navbar
-        currentView={currentView}
-        onChangeView={(view) => {
-          if (currentView === 'game') {
-            handleExitGame();
-          }
-          setCurrentView(view);
-        }}
-        onOpenAddCredits={() => setShowAddCreditsModal(true)}
-        onOpenResetDemo={() => setShowResetDemoModal(true)}
-      />
+  return (
+    <div className={`min-h-screen flex flex-col bg-[#070a13] text-slate-100 selection:bg-amber-500 selection:text-slate-950 font-sans ${currentView === 'game' ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : ''}`}>
+      {/* Top Demo Disclaimer Notice (Hidden during active gameplay) */}
+      {currentView !== 'game' && <DemoDisclaimerBanner />}
+
+      {/* Main Navigation Bar (Hidden during active gameplay) */}
+      {currentView !== 'game' && (
+        <Navbar
+          currentView={currentView}
+          onChangeView={(view) => {
+            if (currentView === 'game') {
+              handleExitGame();
+            }
+            setCurrentView(view);
+          }}
+          onOpenAddCredits={() => setShowAddCreditsModal(true)}
+          onOpenResetDemo={() => setShowResetDemoModal(true)}
+        />
+      )}
 
       {/* Floating System Toast Notification */}
       {lastNotification && (
@@ -106,7 +120,7 @@ export const App = () => {
       )}
 
       {/* Main View Area */}
-      <main className="flex-1">
+      <main className={currentView === 'game' ? "flex-1 w-full h-full min-h-0 flex flex-col items-center justify-center p-0 m-0 overflow-hidden" : "flex-1"}>
         {!isAuthenticated ? (
           <Login />
         ) : currentView === 'game' && activeGame ? (
@@ -141,18 +155,20 @@ export const App = () => {
         onResetConfirmed={handleResetComplete}
       />
 
-      {/* Prototype Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950/60 py-6 px-4 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-amber-400" />
-            <span className="font-semibold text-slate-400">Game08 Platform Demo Prototype</span>
+      {/* Prototype Footer (Hidden during active gameplay) */}
+      {currentView !== 'game' && (
+        <footer className="border-t border-slate-900 bg-slate-950/60 py-6 px-4 text-center text-xs text-slate-500">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-amber-400" />
+              <span className="font-semibold text-slate-400">Game08 Platform Demo Prototype</span>
+            </div>
+            <p className="text-[11px] text-slate-600">
+              Simulated virtual credits only. No real gambling, wagering, deposits, or payouts.
+            </p>
           </div>
-          <p className="text-[11px] text-slate-600">
-            Simulated virtual credits only. No real gambling, wagering, deposits, or payouts.
-          </p>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 };

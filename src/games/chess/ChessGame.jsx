@@ -108,41 +108,42 @@ export const ChessGame = ({ onExit, onWin, user, session, entryFee = 50 }) => {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-3 sm:px-6 py-4">
+    <div className="w-full h-[100dvh] max-h-[100dvh] md:h-auto md:max-w-xl mx-auto flex flex-col justify-between p-2.5 sm:p-4 select-none overflow-hidden overscroll-none touch-manipulation pt-[env(safe-area-inset-top,8px)] pb-[env(safe-area-inset-bottom,8px)]">
       {/* Header */}
-      <div className="flex items-center justify-between p-3.5 mb-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl">
+      <div className="flex items-center justify-between p-3 mb-2 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-xl">
+          <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-lg">
             ♟️
           </div>
           <div>
-            <h2 className="text-base font-black text-white">Chess Master</h2>
-            <p className="text-[11px] text-slate-400">
+            <h2 className="text-sm sm:text-base font-black text-white leading-tight">Chess Master</h2>
+            <p className="text-[10px] text-slate-400">
               Session: <span className="font-mono text-amber-400">{session?.sessionId || 'GSESS-CHESS'}</span> • Entry: {entryFee} Credits
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-1.5">
           <button
             onClick={handleReset}
-            className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 min-h-[38px] min-w-[38px] flex items-center justify-center cursor-pointer"
+            title="Reset Game"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
           <button
             onClick={onExit}
-            className="px-3.5 py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-bold text-xs border border-rose-500/30 min-h-[44px] flex items-center gap-1 cursor-pointer"
+            className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-bold text-xs border border-rose-500/30 min-h-[38px] flex items-center gap-1 cursor-pointer"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-3.5 h-3.5" />
             <span>Exit</span>
           </button>
         </div>
       </div>
 
       {/* Board Card */}
-      <div className="rounded-3xl bg-slate-900 border border-slate-800 p-4 shadow-2xl flex flex-col items-center">
+      <div className="flex-1 min-h-0 rounded-3xl bg-slate-900 border border-slate-800 p-3 shadow-2xl flex flex-col justify-between items-center w-full">
         {/* Turn Status */}
-        <div className="w-full flex items-center justify-between px-2 mb-3 text-xs">
+        <div className="w-full flex items-center justify-between px-2 mb-2 text-xs shrink-0">
           <div className="flex items-center gap-1.5 font-bold">
             {isPlayerTurn ? (
               <span className="text-amber-400 flex items-center gap-1"><User className="w-4 h-4" /> Your Turn (White)</span>
@@ -156,7 +157,7 @@ export const ChessGame = ({ onExit, onWin, user, session, entryFee = 50 }) => {
         </div>
 
         {/* 8x8 Chess Board */}
-        <div className="w-full max-w-[360px] aspect-square rounded-2xl bg-slate-950 p-2 border-2 border-slate-800 shadow-2xl">
+        <div className="w-full max-w-[320px] sm:max-w-[340px] aspect-square rounded-2xl bg-slate-950 p-2 border-2 border-slate-800 shadow-2xl my-auto">
           <div className="grid grid-cols-8 grid-rows-8 w-full h-full rounded-xl overflow-hidden border border-slate-700">
             {board.map((row, r) =>
               row.map((piece, c) => {

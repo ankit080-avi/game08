@@ -128,26 +128,26 @@ export const TicTacToeGame = ({ onExit, onWin, user }) => {
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto px-4 py-6">
+    <div className="w-full h-[100dvh] max-h-[100dvh] md:h-auto md:max-w-xl mx-auto flex flex-col justify-between p-3 select-none overflow-hidden overscroll-none touch-manipulation pt-[env(safe-area-inset-top,10px)] pb-[env(safe-area-inset-bottom,10px)]">
       {/* Top Header */}
-      <div className="flex items-center justify-between p-4 mb-6 rounded-2xl bg-slate-900 border border-slate-800">
+      <div className="flex items-center justify-between p-3.5 mb-2 rounded-2xl bg-slate-900 border border-slate-800 shrink-0">
         <div>
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
             <span>⚡</span> Tic-Tac-Toe Blitz
           </h2>
-          <p className="text-xs text-slate-400">Entry: 50 Credits • Reward: 90 Credits</p>
+          <p className="text-[11px] text-slate-400">Entry: 50 Credits • Reward: 90 Credits</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={handleReset}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center gap-1"
+            className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center gap-1 min-h-[38px] cursor-pointer"
           >
             <RotateCcw className="w-4 h-4" />
-            <span>Reset</span>
+            <span className="hidden sm:inline">Reset</span>
           </button>
           <button
             onClick={onExit}
-            className="p-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs flex items-center gap-1 border border-rose-500/30"
+            className="p-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs flex items-center gap-1 border border-rose-500/30 min-h-[38px] cursor-pointer font-bold"
           >
             <LogOut className="w-4 h-4" />
             <span>Exit</span>
@@ -155,58 +155,63 @@ export const TicTacToeGame = ({ onExit, onWin, user }) => {
         </div>
       </div>
 
-      {/* Turn Banner */}
-      <div className="text-center mb-6">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/80 border border-slate-700 text-sm font-semibold text-white">
-          {winner ? (
-            winner === 'X' ? '🎉 You Won (+90 Credits)!' : winner === 'O' ? '🤖 Bot Won!' : '🤝 It is a Draw!'
-          ) : isPlayerTurn ? (
-            <>
-              <User className="w-4 h-4 text-emerald-400" />
-              <span>Your Turn (X)</span>
-            </>
-          ) : (
-            <>
-              <Bot className="w-4 h-4 text-amber-400 animate-spin" />
-              <span>Bot Thinking (O)...</span>
-            </>
-          )}
+      {/* Main Play Area */}
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-center py-2 w-full">
+        {/* Turn Banner */}
+        <div className="text-center mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/90 border border-slate-700 text-xs sm:text-sm font-semibold text-white shadow-md">
+            {winner ? (
+              winner === 'X' ? '🎉 You Won (+90 Credits)!' : winner === 'O' ? '🤖 Bot Won!' : '🤝 It is a Draw!'
+            ) : isPlayerTurn ? (
+              <>
+                <User className="w-4 h-4 text-emerald-400" />
+                <span>Your Turn (X)</span>
+              </>
+            ) : (
+              <>
+                <Bot className="w-4 h-4 text-amber-400 animate-spin" />
+                <span>Bot Thinking (O)...</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* 3x3 Grid */}
+        <div className="grid grid-cols-3 gap-2.5 sm:gap-3 p-3 sm:p-4 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl w-full max-w-[340px] aspect-square">
+          {board.map((val, i) => {
+            const isHighlight = winningLine && winningLine.includes(i);
+            return (
+              <button
+                key={i}
+                onClick={() => handleCellClick(i)}
+                disabled={!isPlayerTurn || val !== null || winner !== null}
+                className={`aspect-square rounded-2xl flex items-center justify-center text-4xl sm:text-5xl font-black transition-all ${
+                  isHighlight
+                    ? 'bg-emerald-500/30 border-2 border-emerald-400 text-emerald-300 scale-105'
+                    : 'bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-100'
+                } ${!val && isPlayerTurn && !winner ? 'cursor-pointer hover:border-amber-400 active:scale-95' : ''}`}
+              >
+                {val === 'X' && <span className="text-cyan-400">X</span>}
+                {val === 'O' && <span className="text-rose-400">O</span>}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* 3x3 Grid */}
-      <div className="grid grid-cols-3 gap-3 p-4 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl">
-        {board.map((val, i) => {
-          const isHighlight = winningLine && winningLine.includes(i);
-          return (
-            <button
-              key={i}
-              onClick={() => handleCellClick(i)}
-              disabled={!isPlayerTurn || val !== null || winner !== null}
-              className={`aspect-square rounded-2xl flex items-center justify-center text-4xl sm:text-5xl font-black transition-all ${
-                isHighlight
-                  ? 'bg-emerald-500/30 border-2 border-emerald-400 text-emerald-300 scale-105'
-                  : 'bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-100'
-              } ${!val && isPlayerTurn && !winner ? 'cursor-pointer hover:border-amber-400' : ''}`}
-            >
-              {val === 'X' && <span className="text-cyan-400">X</span>}
-              {val === 'O' && <span className="text-rose-400">O</span>}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Winner Prompt */}
-      {winner && (
-        <div className="mt-6 text-center">
+      {/* Winner Prompt / Bottom Controls */}
+      <div className="shrink-0 text-center py-2">
+        {winner ? (
           <button
             onClick={handleReset}
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20"
+            className="w-full max-w-[280px] py-3 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer"
           >
             Play Another Round
           </button>
-        </div>
-      )}
+        ) : (
+          <span className="text-[11px] text-slate-500 font-medium">Tap any open square to place your mark</span>
+        )}
+      </div>
     </div>
   );
 };

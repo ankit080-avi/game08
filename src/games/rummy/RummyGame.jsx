@@ -56,6 +56,28 @@ export const RummyGame = ({
   const [historyLogs, setHistoryLogs] = useState([]);
   const [botActionText, setBotActionText] = useState('Waiting...');
 
+  const [isMobilePortrait, setIsMobilePortrait] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 768 && window.innerHeight > window.innerWidth;
+  });
+  const [dismissRotatePrompt, setDismissRotatePrompt] = useState(false);
+
+  useEffect(() => {
+    const handleOrientationCheck = () => {
+      if (typeof window === 'undefined') return;
+      const isMobile = window.innerWidth < 768;
+      const isPortrait = window.innerHeight > window.innerWidth;
+      setIsMobilePortrait(isMobile && isPortrait);
+    };
+    handleOrientationCheck();
+    window.addEventListener('resize', handleOrientationCheck);
+    window.addEventListener('orientationchange', handleOrientationCheck);
+    return () => {
+      window.removeEventListener('resize', handleOrientationCheck);
+      window.removeEventListener('orientationchange', handleOrientationCheck);
+    };
+  }, []);
+
   const botTimerRef = useRef(null);
 
   const addLog = useCallback((msg) => {
@@ -470,9 +492,9 @@ export const RummyGame = ({
   const isShowReady = pureSeqCount >= 1 && totalSeqCount >= 2 && liveDeadwood === 0;
 
   return (
-    <div className="relative w-full min-h-[calc(100vh-80px)] bg-gradient-to-b from-slate-950 via-[#041d11] to-black text-white flex flex-col items-center select-none font-sans overflow-x-hidden">
+    <div className="relative w-full h-[100dvh] max-h-[100dvh] md:h-auto md:min-h-[calc(100vh-80px)] bg-gradient-to-b from-slate-950 via-[#041d11] to-black text-white flex flex-col items-center select-none font-sans overflow-x-hidden overflow-y-auto pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]">
       {/* 1. Header Navigation & Game Stakes */}
-      <header className="w-full max-w-5xl px-3 py-2 flex items-center justify-between border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md z-30">
+      <header className="w-full max-w-5xl px-3 py-2 flex items-center justify-between border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md z-30 shrink-0">
         <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={onExit}
@@ -519,6 +541,24 @@ export const RummyGame = ({
           </button>
         </div>
       </header>
+
+      {/* Landscape Orientation Recommended Banner on Mobile Portrait */}
+      {isMobilePortrait && !dismissRotatePrompt && (
+        <div className="w-full max-w-xl px-3 pt-2 z-30 shrink-0">
+          <div className="w-full py-1.5 px-3 rounded-xl bg-gradient-to-r from-amber-600/95 via-yellow-500/95 to-amber-600/95 border border-amber-300 text-slate-950 flex items-center justify-between text-xs shadow-lg animate-fade-in">
+            <div className="flex items-center gap-2 font-bold">
+              <span className="text-base">🔄</span>
+              <span>Rotate device to Landscape for full casino table</span>
+            </div>
+            <button
+              onClick={() => setDismissRotatePrompt(true)}
+              className="px-2 py-0.5 rounded-lg bg-slate-950 text-amber-300 font-bold text-[10px] hover:bg-slate-900 cursor-pointer shadow"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 2. Step-by-Step Prompt Banner (Clear User Guidance) */}
       <div className="w-full max-w-4xl px-3 pt-2">

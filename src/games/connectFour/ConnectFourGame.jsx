@@ -114,8 +114,8 @@ export const ConnectFourGame = ({ onExit, onWin, user, session, entryFee = 45 })
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto px-3 sm:px-6 py-4">
-      <div className="flex items-center justify-between p-3.5 mb-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl">
+    <div className="w-full h-[100dvh] max-h-[100dvh] md:h-auto md:max-w-lg mx-auto flex flex-col justify-between p-3 select-none overflow-hidden overscroll-none touch-manipulation pt-[env(safe-area-inset-top,10px)] pb-[env(safe-area-inset-bottom,10px)] pl-[env(safe-area-inset-left,10px)] pr-[env(safe-area-inset-right,10px)]">
+      <div className="flex items-center justify-between p-3.5 mb-2 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-xl">
             🔵
@@ -138,8 +138,8 @@ export const ConnectFourGame = ({ onExit, onWin, user, session, entryFee = 45 })
         </div>
       </div>
 
-      <div className="rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-5 shadow-2xl flex flex-col items-center">
-        <div className="w-full flex items-center justify-between px-2 mb-3 text-xs font-bold">
+      <div className="flex-1 min-h-0 rounded-3xl bg-slate-900 border border-slate-800 p-3 sm:p-5 shadow-2xl flex flex-col items-center justify-between">
+        <div className="w-full flex items-center justify-between px-2 mb-2 text-xs font-bold shrink-0">
           <div className="flex items-center gap-1.5">
             {isPlayerTurn ? (
               <span className="text-red-400 flex items-center gap-1"><User className="w-4 h-4" /> You (Red)</span>
@@ -150,38 +150,41 @@ export const ConnectFourGame = ({ onExit, onWin, user, session, entryFee = 45 })
           <div className="text-slate-400">Connect 4 to Win</div>
         </div>
 
-        {/* 7-Column Drop Buttons */}
-        <div className="grid grid-cols-7 gap-1.5 w-full max-w-[340px] mb-2">
-          {Array.from({ length: COLS }).map((_, c) => (
-            <button
-              key={c}
-              onClick={() => dropDisc(c)}
-              disabled={!isPlayerTurn || winner || board[0][c]}
-              className="py-1.5 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white text-xs font-black transition-colors cursor-pointer disabled:opacity-30"
-            >
-              ↓
-            </button>
-          ))}
-        </div>
+        {/* Board & Controls Center Container */}
+        <div className="flex-1 min-h-0 w-full flex flex-col items-center justify-center">
+          {/* 7-Column Drop Buttons */}
+          <div className="grid grid-cols-7 gap-1.5 w-full max-w-[340px] mb-2">
+            {Array.from({ length: COLS }).map((_, c) => (
+              <button
+                key={c}
+                onClick={() => dropDisc(c)}
+                disabled={!isPlayerTurn || winner || board[0][c]}
+                className="py-2 rounded-lg bg-slate-800 hover:bg-blue-600 active:bg-blue-700 text-slate-300 hover:text-white text-xs font-black transition-colors cursor-pointer disabled:opacity-30 min-h-[38px] flex items-center justify-center"
+              >
+                ↓
+              </button>
+            ))}
+          </div>
 
-        {/* 7x6 Connect Four Grid */}
-        <div className="w-full max-w-[340px] p-3 bg-blue-700 rounded-2xl border-4 border-blue-900 shadow-2xl">
-          <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-            {board.map((row, r) =>
-              row.map((val, c) => (
-                <div
-                  key={`${r}-${c}`}
-                  className="aspect-square rounded-full bg-slate-950 border-2 border-blue-800 flex items-center justify-center overflow-hidden shadow-inner"
-                >
-                  {val === 'R' && <div className="w-full h-full rounded-full bg-red-500 border border-red-300 shadow-lg animate-fade-in" />}
-                  {val === 'Y' && <div className="w-full h-full rounded-full bg-amber-400 border border-amber-200 shadow-lg animate-fade-in" />}
-                </div>
-              ))
-            )}
+          {/* 7x6 Connect Four Grid */}
+          <div className="w-full max-w-[340px] p-2.5 sm:p-3 bg-blue-700 rounded-2xl border-4 border-blue-900 shadow-2xl">
+            <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
+              {board.map((row, r) =>
+                row.map((val, c) => (
+                  <div
+                    key={`${r}-${c}`}
+                    className="aspect-square rounded-full bg-slate-950 border-2 border-blue-800 flex items-center justify-center overflow-hidden shadow-inner"
+                  >
+                    {val === 'R' && <div className="w-full h-full rounded-full bg-red-500 border border-red-300 shadow-lg animate-fade-in" />}
+                    {val === 'Y' && <div className="w-full h-full rounded-full bg-amber-400 border border-amber-200 shadow-lg animate-fade-in" />}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="w-full text-center mt-4 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-semibold text-slate-300">
+        <div className="w-full text-center mt-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-semibold text-slate-300 shrink-0">
           {status}
         </div>
       </div>

@@ -94,9 +94,9 @@ export const GenericArcadeGame = ({ game, onExit, onWin, user, session, entryFee
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto px-3 sm:px-6 py-4">
+    <div className="w-full h-[100dvh] max-h-[100dvh] md:h-auto md:max-w-xl mx-auto flex flex-col justify-between p-3 select-none overflow-hidden overscroll-none touch-manipulation pt-[env(safe-area-inset-top,10px)] pb-[env(safe-area-inset-bottom,10px)] pl-[env(safe-area-inset-left,10px)] pr-[env(safe-area-inset-right,10px)]">
       {/* Header */}
-      <div className="flex items-center justify-between p-3.5 mb-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl">
+      <div className="flex items-center justify-between p-3.5 mb-2 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-xl">
             {getGameIcon()}
@@ -120,14 +120,14 @@ export const GenericArcadeGame = ({ game, onExit, onWin, user, session, entryFee
       </div>
 
       {/* Arena Card */}
-      <div className="rounded-3xl bg-slate-900 border border-slate-800 p-5 shadow-2xl flex flex-col items-center">
-        <div className="w-full flex items-center justify-between px-2 mb-4 text-xs font-bold">
+      <div className="flex-1 min-h-0 rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-5 shadow-2xl flex flex-col items-center justify-between">
+        <div className="w-full flex items-center justify-between px-2 mb-2 text-xs font-bold shrink-0">
           <div>Score: <span className="text-amber-400 text-sm font-black">{score}</span> <span className="text-slate-500">(Target: 60)</span></div>
           <div>Attempts Left: <span className="text-emerald-400 text-sm font-black">{roundsLeft}</span></div>
         </div>
 
         {/* Dynamic Interactive Gauge */}
-        <div className="w-full h-44 sm:h-52 rounded-2xl bg-slate-950 border-2 border-slate-800 p-4 relative flex flex-col justify-between overflow-hidden shadow-inner select-none">
+        <div className="flex-1 min-h-0 w-full max-h-[280px] rounded-2xl bg-slate-950 border-2 border-slate-800 p-4 relative flex flex-col justify-between overflow-hidden shadow-inner select-none">
           {/* Center Target Marker */}
           <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-16 bg-amber-500/15 border-x border-amber-500/30 flex items-center justify-center">
             <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest rotate-90">BULLSEYE</span>
@@ -153,7 +153,7 @@ export const GenericArcadeGame = ({ game, onExit, onWin, user, session, entryFee
         </div>
 
         {/* Status prompt */}
-        <div className="w-full text-center my-3 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-semibold text-slate-300">
+        <div className="w-full text-center my-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-semibold text-slate-300 shrink-0">
           {message}
         </div>
 
@@ -161,7 +161,7 @@ export const GenericArcadeGame = ({ game, onExit, onWin, user, session, entryFee
         <button
           onClick={handleAction}
           disabled={gameOver || roundsLeft <= 0 || isActionActive}
-          className="w-full min-h-[52px] py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-sm flex items-center justify-center gap-2 shadow-xl shadow-amber-500/25 cursor-pointer active:scale-95 disabled:opacity-40"
+          className="shrink-0 w-full min-h-[52px] py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-sm flex items-center justify-center gap-2 shadow-xl shadow-amber-500/25 cursor-pointer active:scale-95 disabled:opacity-40"
         >
           <Zap className="w-5 h-5 fill-current" />
           <span>{isActionActive ? 'RECORDING STRIKE...' : 'TRIGGER ACTION'}</span>
