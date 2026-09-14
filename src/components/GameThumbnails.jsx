@@ -8,17 +8,25 @@ import appleImg from '../assets/games/knife-rain/apple.png';
  * Mobile-ready, touch-friendly, zero external dependencies.
  */
 
-const CardWrapper = ({ children, glowColor = 'amber' }) => (
-  <div className={`relative w-full h-40 sm:h-44 rounded-2xl overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border border-slate-800/80 flex items-center justify-center p-2.5 transition-all duration-300 group-hover:border-${glowColor}-500/50`}>
-    <div className={`absolute inset-0 bg-radial from-${glowColor}-500/10 via-transparent to-transparent opacity-60 pointer-events-none`} />
+const CardWrapper = ({ children, glowColor = 'amber', compact = false, className = '' }) => (
+  <div
+    className={`relative w-full rounded-2xl overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center transition-all duration-300 ${
+      compact
+        ? 'aspect-square p-1.5 border border-slate-800/80 shadow-md'
+        : `h-40 sm:h-44 p-2.5 border border-slate-800/80 group-hover:border-${glowColor}-500/50`
+    } ${className}`}
+  >
+    <div
+      className={`absolute inset-0 bg-radial from-${glowColor}-500/${compact ? '20' : '10'} via-transparent to-transparent opacity-70 pointer-events-none`}
+    />
     {children}
   </div>
 );
 
 // 1. Ludo Classic
-export const LudoThumbnail = () => (
-  <CardWrapper glowColor="amber">
-    <svg viewBox="0 0 200 200" className="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl">
+export const LudoThumbnail = ({ compact = false }) => (
+  <CardWrapper glowColor="amber" compact={compact}>
+    <svg viewBox="0 0 200 200" className={compact ? "w-full h-full max-w-[85%] max-h-[85%] drop-shadow-md" : "w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl"}>
       <defs>
         <radialGradient id="ludoRed" cx="35%" cy="35%" r="65%"><stop offset="0%" stopColor="#f87171" /><stop offset="100%" stopColor="#dc2626" /></radialGradient>
         <radialGradient id="ludoGreen" cx="35%" cy="35%" r="65%"><stop offset="0%" stopColor="#34d399" /><stop offset="100%" stopColor="#059669" /></radialGradient>
@@ -52,16 +60,18 @@ export const LudoThumbnail = () => (
       <polygon points="100,100 83,117 117,117" fill="url(#ludoBlue)" />
       <polygon points="95,102 105,102 108,96 103,98 100,93 97,98 92,96" fill="#fef08a" />
     </svg>
+    {!compact && (
     <div className="absolute bottom-2 right-2.5 bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
       <span>🎲</span><span>LUDO</span>
     </div>
+    )}
   </CardWrapper>
 );
 
 // 2. Tic-Tac-Toe Blitz
-export const TicTacToeThumbnail = () => (
-  <CardWrapper glowColor="cyan">
-    <svg viewBox="0 0 200 200" className="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl">
+export const TicTacToeThumbnail = ({ compact = false }) => (
+  <CardWrapper glowColor="cyan" compact={compact}>
+    <svg viewBox="0 0 200 200" className={compact ? "w-full h-full max-w-[85%] max-h-[85%] drop-shadow-md" : "w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl"}>
       <rect x="15" y="15" width="170" height="170" rx="14" fill="#090d16" stroke="#1e293b" strokeWidth="2.5" />
       <line x1="72" y1="28" x2="72" y2="172" stroke="#334155" strokeWidth="5" strokeLinecap="round" />
       <line x1="128" y1="28" x2="128" y2="172" stroke="#334155" strokeWidth="5" strokeLinecap="round" />
@@ -74,16 +84,18 @@ export const TicTacToeThumbnail = () => (
       <circle cx="100" cy="100" r="16" fill="none" stroke="#f43f5e" strokeWidth="5" />
       <line x1="28" y1="172" x2="172" y2="28" stroke="#22d3ee" strokeWidth="4" strokeLinecap="round" strokeDasharray="5,4" />
     </svg>
+    {!compact && (
     <div className="absolute bottom-2 right-2.5 bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
       <span>⚡</span><span>X / O</span>
     </div>
+    )}
   </CardWrapper>
 );
 
 // 3. Snakes & Ladders
-export const SnakesLaddersThumbnail = () => (
-  <CardWrapper glowColor="emerald">
-    <svg viewBox="0 0 200 200" className="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl">
+export const SnakesLaddersThumbnail = ({ compact = false }) => (
+  <CardWrapper glowColor="emerald" compact={compact}>
+    <svg viewBox="0 0 200 200" className={compact ? "w-full h-full max-w-[85%] max-h-[85%] drop-shadow-md" : "w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl"}>
       <rect x="15" y="15" width="170" height="170" rx="14" fill="#090d16" stroke="#1e293b" strokeWidth="2.5" />
       {Array.from({ length: 4 }).map((_, r) =>
         Array.from({ length: 4 }).map((_, c) => (
@@ -101,16 +113,18 @@ export const SnakesLaddersThumbnail = () => (
       <path d="M 160 38 Q 175 65 145 85 T 125 125 T 155 155" fill="none" stroke="#10b981" strokeWidth="7" strokeLinecap="round" />
       <circle cx="160" cy="38" r="6" fill="#047857" />
     </svg>
+    {!compact && (
     <div className="absolute bottom-2 right-2.5 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
       <span>🐍</span><span>LADDERS</span>
     </div>
+    )}
   </CardWrapper>
 );
 
 // 4. Carrom
-export const CarromThumbnail = () => (
-  <CardWrapper glowColor="amber">
-    <svg viewBox="0 0 200 200" className="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl">
+export const CarromThumbnail = ({ compact = false }) => (
+  <CardWrapper glowColor="amber" compact={compact}>
+    <svg viewBox="0 0 200 200" className={compact ? "w-full h-full max-w-[85%] max-h-[85%] drop-shadow-md" : "w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl"}>
       <rect x="15" y="15" width="170" height="170" rx="16" fill="#78350f" stroke="#b45309" strokeWidth="4" />
       <rect x="25" y="25" width="150" height="150" rx="6" fill="#fed7aa" stroke="#9a3412" strokeWidth="2" />
       <circle cx="34" cy="34" r="8" fill="#1e293b" />
@@ -125,16 +139,18 @@ export const CarromThumbnail = () => (
       <circle cx="110" cy="108" r="6" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1" />
       <circle cx="100" cy="142" r="10" fill="#fef08a" stroke="#ca8a04" strokeWidth="2.5" />
     </svg>
+    {!compact && (
     <div className="absolute bottom-2 right-2.5 bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
       <span>🎯</span><span>CARROM</span>
     </div>
+    )}
   </CardWrapper>
 );
 
 // 5. Chess
-export const ChessThumbnail = () => (
-  <CardWrapper glowColor="indigo">
-    <svg viewBox="0 0 200 200" className="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl">
+export const ChessThumbnail = ({ compact = false }) => (
+  <CardWrapper glowColor="indigo" compact={compact}>
+    <svg viewBox="0 0 200 200" className={compact ? "w-full h-full max-w-[85%] max-h-[85%] drop-shadow-md" : "w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl"}>
       <rect x="15" y="15" width="170" height="170" rx="12" fill="#0f172a" stroke="#475569" strokeWidth="3" />
       {Array.from({ length: 4 }).map((_, r) =>
         Array.from({ length: 4 }).map((_, c) => (
@@ -149,16 +165,18 @@ export const ChessThumbnail = () => (
         <circle cx="12" cy="7" r="4" fill="#0f172a" stroke="#f8fafc" strokeWidth="1.2" />
       </g>
     </svg>
+    {!compact && (
     <div className="absolute bottom-2 right-2.5 bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
       <span>♟️</span><span>CHESS</span>
     </div>
+    )}
   </CardWrapper>
 );
 
 // 6. Checkers
-export const CheckersThumbnail = () => (
-  <CardWrapper glowColor="rose">
-    <svg viewBox="0 0 200 200" className="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl">
+export const CheckersThumbnail = ({ compact = false }) => (
+  <CardWrapper glowColor="rose" compact={compact}>
+    <svg viewBox="0 0 200 200" className={compact ? "w-full h-full max-w-[85%] max-h-[85%] drop-shadow-md" : "w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl"}>
       <rect x="15" y="15" width="170" height="170" rx="12" fill="#1e293b" stroke="#64748b" strokeWidth="3" />
       {Array.from({ length: 4 }).map((_, r) =>
         Array.from({ length: 4 }).map((_, c) => (
@@ -172,16 +190,18 @@ export const CheckersThumbnail = () => (
       <circle cx="137" cy="137" r="14" fill="#dc2626" stroke="#fca5a5" strokeWidth="2.5" />
       <text x="58" y="66" fill="#fef08a" fontSize="11" fontWeight="bold">★</text>
     </svg>
+    {!compact && (
     <div className="absolute bottom-2 right-2.5 bg-rose-500/20 border border-rose-500/40 text-rose-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
       <span>🔴</span><span>CHECKERS</span>
     </div>
+    )}
   </CardWrapper>
 );
 
 // 7. 8 Ball Pool
-export const PoolThumbnail = () => (
-  <CardWrapper glowColor="emerald">
-    <svg viewBox="0 0 200 200" className="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl">
+export const PoolThumbnail = ({ compact = false }) => (
+  <CardWrapper glowColor="emerald" compact={compact}>
+    <svg viewBox="0 0 200 200" className={compact ? "w-full h-full max-w-[85%] max-h-[85%] drop-shadow-md" : "w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl"}>
       <rect x="15" y="30" width="170" height="140" rx="16" fill="#78350f" stroke="#b45309" strokeWidth="4" />
       <rect x="25" y="40" width="150" height="120" rx="8" fill="#047857" stroke="#065f46" strokeWidth="2" />
       <circle cx="34" cy="48" r="7" fill="#0f172a" />
@@ -197,16 +217,18 @@ export const PoolThumbnail = () => (
       <circle cx="146" cy="110" r="9" fill="#dc2626" stroke="#ffffff" strokeWidth="1" />
       <line x1="30" y1="120" x2="60" y2="105" stroke="#f59e0b" strokeWidth="4" strokeLinecap="round" />
     </svg>
+    {!compact && (
     <div className="absolute bottom-2 right-2.5 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
       <span>🎱</span><span>8 BALL</span>
     </div>
+    )}
   </CardWrapper>
 );
 
 // 8. Archery
-export const ArcheryThumbnail = () => (
-  <CardWrapper glowColor="amber">
-    <svg viewBox="0 0 200 200" className="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl">
+export const ArcheryThumbnail = ({ compact = false }) => (
+  <CardWrapper glowColor="amber" compact={compact}>
+    <svg viewBox="0 0 200 200" className={compact ? "w-full h-full max-w-[85%] max-h-[85%] drop-shadow-md" : "w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl"}>
       <circle cx="100" cy="100" r="65" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2" />
       <circle cx="100" cy="100" r="50" fill="#0f172a" stroke="#334155" strokeWidth="1.5" />
       <circle cx="100" cy="100" r="35" fill="#0284c7" stroke="#0369a1" strokeWidth="1.5" />
@@ -218,36 +240,40 @@ export const ArcheryThumbnail = () => (
         <polygon points="20,170 30,170 25,160" fill="#dc2626" />
       </g>
     </svg>
+    {!compact && (
     <div className="absolute bottom-2 right-2.5 bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
       <span>🏹</span><span>ARCHERY</span>
     </div>
+    )}
   </CardWrapper>
 );
 
 // 9. Knife Rain
-export const KnifeTargetThumbnail = () => (
-  <CardWrapper glowColor="amber">
+export const KnifeTargetThumbnail = ({ compact = false }) => (
+  <CardWrapper glowColor="amber" compact={compact}>
     <div className="relative w-full h-full flex flex-col items-center justify-center">
       <img
         src={knifeLogo}
         alt="Knife Rain"
-        className="w-28 sm:w-32 h-auto object-contain filter drop-shadow-lg mb-1 group-hover:scale-105 transition-transform"
+        className={`${compact ? 'w-14 sm:w-16' : 'w-28 sm:w-32'} h-auto object-contain filter drop-shadow-lg mb-1 group-hover:scale-105 transition-transform`}
       />
-      <div className="flex items-center gap-2">
-        <img src={knifeDefault} alt="" className="w-4 h-11 object-contain -rotate-12 drop-shadow" />
-        <img src={appleImg} alt="" className="w-5 h-6 object-contain drop-shadow" />
+      <div className="flex items-center gap-1.5">
+        <img src={knifeDefault} alt="" className={`${compact ? 'w-2.5 h-7' : 'w-4 h-11'} object-contain -rotate-12 drop-shadow`} />
+        <img src={appleImg} alt="" className={`${compact ? 'w-3.5 h-4' : 'w-5 h-6'} object-contain drop-shadow`} />
       </div>
     </div>
+    {!compact && (
     <div className="absolute bottom-2 right-2.5 bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
       <span>🗡️</span><span>KNIFE RAIN</span>
     </div>
+    )}
   </CardWrapper>
 );
 
 // 10. Memory Match
-export const MemoryMatchThumbnail = () => (
-  <CardWrapper glowColor="indigo">
-    <svg viewBox="0 0 200 200" className="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl">
+export const MemoryMatchThumbnail = ({ compact = false }) => (
+  <CardWrapper glowColor="indigo" compact={compact}>
+    <svg viewBox="0 0 200 200" className={compact ? "w-full h-full max-w-[85%] max-h-[85%] drop-shadow-md" : "w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl"}>
       <rect x="25" y="30" width="65" height="65" rx="10" fill="#4338ca" stroke="#6366f1" strokeWidth="2.5" />
       <text x="47" y="73" fill="#ffffff" fontSize="28">💎</text>
       <rect x="110" y="30" width="65" height="65" rx="10" fill="#1e1b4b" stroke="#3730a3" strokeWidth="2" />
@@ -257,16 +283,18 @@ export const MemoryMatchThumbnail = () => (
       <rect x="110" y="105" width="65" height="65" rx="10" fill="#4338ca" stroke="#6366f1" strokeWidth="2.5" />
       <text x="132" y="148" fill="#ffffff" fontSize="28">💎</text>
     </svg>
+    {!compact && (
     <div className="absolute bottom-2 right-2.5 bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
       <span>🧠</span><span>MEMORY</span>
     </div>
+    )}
   </CardWrapper>
 );
 
 // 11. Sudoku
-export const SudokuThumbnail = () => (
-  <CardWrapper glowColor="cyan">
-    <svg viewBox="0 0 200 200" className="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl">
+export const SudokuThumbnail = ({ compact = false }) => (
+  <CardWrapper glowColor="cyan" compact={compact}>
+    <svg viewBox="0 0 200 200" className={compact ? "w-full h-full max-w-[85%] max-h-[85%] drop-shadow-md" : "w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl"}>
       <rect x="20" y="20" width="160" height="160" rx="10" fill="#090d16" stroke="#38bdf8" strokeWidth="3" />
       <line x1="73" y1="20" x2="73" y2="180" stroke="#38bdf8" strokeWidth="2.5" />
       <line x1="126" y1="20" x2="126" y2="180" stroke="#38bdf8" strokeWidth="2.5" />
@@ -278,16 +306,18 @@ export const SudokuThumbnail = () => (
       <text x="40" y="162" fill="#34d399" fontSize="20" fontWeight="bold" fontFamily="monospace">7</text>
       <text x="93" y="162" fill="#f8fafc" fontSize="20" fontWeight="bold" fontFamily="monospace">1</text>
     </svg>
+    {!compact && (
     <div className="absolute bottom-2 right-2.5 bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
       <span>🔢</span><span>SUDOKU</span>
     </div>
+    )}
   </CardWrapper>
 );
 
 // 12. Mines
-export const MinesThumbnail = () => (
-  <CardWrapper glowColor="rose">
-    <svg viewBox="0 0 200 200" className="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl">
+export const MinesThumbnail = ({ compact = false }) => (
+  <CardWrapper glowColor="rose" compact={compact}>
+    <svg viewBox="0 0 200 200" className={compact ? "w-full h-full max-w-[85%] max-h-[85%] drop-shadow-md" : "w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl"}>
       <rect x="20" y="20" width="160" height="160" rx="12" fill="#0f172a" stroke="#334155" strokeWidth="2" />
       <rect x="30" y="30" width="40" height="40" rx="6" fill="#10b981" />
       <text x="43" y="58" fill="#ffffff" fontSize="18">💎</text>
@@ -303,16 +333,18 @@ export const MinesThumbnail = () => (
       <rect x="80" y="130" width="40" height="40" rx="6" fill="#1e293b" />
       <rect x="130" y="130" width="40" height="40" rx="6" fill="#1e293b" />
     </svg>
+    {!compact && (
     <div className="absolute bottom-2 right-2.5 bg-rose-500/20 border border-rose-500/40 text-rose-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
       <span>💣</span><span>MINES</span>
     </div>
+    )}
   </CardWrapper>
 );
 
 // 13. Bubble Shooter
-export const BubbleShooterThumbnail = () => (
-  <CardWrapper glowColor="cyan">
-    <svg viewBox="0 0 200 200" className="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl">
+export const BubbleShooterThumbnail = ({ compact = false }) => (
+  <CardWrapper glowColor="cyan" compact={compact}>
+    <svg viewBox="0 0 200 200" className={compact ? "w-full h-full max-w-[85%] max-h-[85%] drop-shadow-md" : "w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl"}>
       <rect x="20" y="15" width="160" height="170" rx="12" fill="#090d16" stroke="#334155" strokeWidth="2" />
       <circle cx="45" cy="40" r="14" fill="#38bdf8" />
       <circle cx="75" cy="40" r="14" fill="#f43f5e" />
@@ -324,16 +356,18 @@ export const BubbleShooterThumbnail = () => (
       <circle cx="100" cy="155" r="15" fill="#f43f5e" stroke="#ffffff" strokeWidth="2" />
       <line x1="100" y1="155" x2="100" y2="100" stroke="#f43f5e" strokeWidth="2.5" strokeDasharray="4,4" />
     </svg>
+    {!compact && (
     <div className="absolute bottom-2 right-2.5 bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
       <span>🫧</span><span>BUBBLE</span>
     </div>
+    )}
   </CardWrapper>
 );
 
 // 14. Fruit Slice
-export const FruitSliceThumbnail = () => (
-  <CardWrapper glowColor="amber">
-    <svg viewBox="0 0 200 200" className="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl">
+export const FruitSliceThumbnail = ({ compact = false }) => (
+  <CardWrapper glowColor="amber" compact={compact}>
+    <svg viewBox="0 0 200 200" className={compact ? "w-full h-full max-w-[85%] max-h-[85%] drop-shadow-md" : "w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl"}>
       <circle cx="85" cy="85" r="45" fill="#ef4444" stroke="#b91c1c" strokeWidth="3" />
       <circle cx="85" cy="85" r="35" fill="#fca5a5" />
       <circle cx="85" cy="85" r="3" fill="#0f172a" />
@@ -345,16 +379,18 @@ export const FruitSliceThumbnail = () => (
       <line x1="20" y1="170" x2="180" y2="30" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
       <line x1="20" y1="170" x2="180" y2="30" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
+    {!compact && (
     <div className="absolute bottom-2 right-2.5 bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
       <span>🍉</span><span>FRUIT SLICE</span>
     </div>
+    )}
   </CardWrapper>
 );
 
 // 15. Connect Four
-export const ConnectFourThumbnail = () => (
-  <CardWrapper glowColor="indigo">
-    <svg viewBox="0 0 200 200" className="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl">
+export const ConnectFourThumbnail = ({ compact = false }) => (
+  <CardWrapper glowColor="indigo" compact={compact}>
+    <svg viewBox="0 0 200 200" className={compact ? "w-full h-full max-w-[85%] max-h-[85%] drop-shadow-md" : "w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl"}>
       <rect x="20" y="30" width="160" height="135" rx="12" fill="#1d4ed8" stroke="#1e40af" strokeWidth="3" />
       {Array.from({ length: 3 }).map((_, r) =>
         Array.from({ length: 4 }).map((_, c) => {
@@ -367,16 +403,18 @@ export const ConnectFourThumbnail = () => (
         })
       )}
     </svg>
+    {!compact && (
     <div className="absolute bottom-2 right-2.5 bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
       <span>🔵</span><span>CONNECT 4</span>
     </div>
+    )}
   </CardWrapper>
 );
 
 // 16. Rock Paper Scissors
-export const RPSThumbnail = () => (
-  <CardWrapper glowColor="amber">
-    <svg viewBox="0 0 200 200" className="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl">
+export const RPSThumbnail = ({ compact = false }) => (
+  <CardWrapper glowColor="amber" compact={compact}>
+    <svg viewBox="0 0 200 200" className={compact ? "w-full h-full max-w-[85%] max-h-[85%] drop-shadow-md" : "w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl"}>
       <circle cx="60" cy="70" r="32" fill="#1e293b" stroke="#f59e0b" strokeWidth="2.5" />
       <text x="43" y="79" fontSize="28">✊</text>
       <circle cx="140" cy="70" r="32" fill="#1e293b" stroke="#38bdf8" strokeWidth="2.5" />
@@ -384,16 +422,18 @@ export const RPSThumbnail = () => (
       <circle cx="100" cy="140" r="32" fill="#1e293b" stroke="#f43f5e" strokeWidth="2.5" />
       <text x="83" y="149" fontSize="28">✌️</text>
     </svg>
+    {!compact && (
     <div className="absolute bottom-2 right-2.5 bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
       <span>✊</span><span>RPS CLASH</span>
     </div>
+    )}
   </CardWrapper>
 );
 
 // 17. Indian Rummy (RummyCircle Classic)
-export const RummyThumbnail = () => (
-  <CardWrapper glowColor="emerald">
-    <svg viewBox="0 0 200 200" className="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl">
+export const RummyThumbnail = ({ compact = false }) => (
+  <CardWrapper glowColor="emerald" compact={compact}>
+    <svg viewBox="0 0 200 200" className={compact ? "w-full h-full max-w-[85%] max-h-[85%] drop-shadow-md" : "w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl"}>
       <defs>
         <radialGradient id="feltGrad" cx="50%" cy="50%" r="60%">
           <stop offset="0%" stopColor="#0a5c32" />
@@ -444,9 +484,11 @@ export const RummyThumbnail = () => (
       <rect x="62" y="128" width="76" height="18" rx="9" fill="#065f46" stroke="#10b981" strokeWidth="1.5" />
       <text x="100" y="140" fontSize="9" fontWeight="900" fill="#6ee7b7" textAnchor="middle" letterSpacing="1">PURE SEC ✓</text>
     </svg>
+    {!compact && (
     <div className="absolute bottom-2 right-2.5 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
       <span>🎴</span><span>RUMMY</span>
     </div>
+    )}
   </CardWrapper>
 );
 
