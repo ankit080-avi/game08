@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
 import { useWallet } from './context/WalletContext';
 import { DemoDisclaimerBanner } from './components/DemoDisclaimerBanner';
@@ -9,16 +9,44 @@ import { TransactionHistory } from './components/TransactionHistory';
 import { AddCreditsModal } from './components/AddCreditsModal';
 import { ResetDemoModal } from './components/ResetDemoModal';
 import { GameWrapper } from './games/GameWrapper';
+import { GAME_REGISTRY } from './games/registry.js';
 import { CheckCircle2, Info, X } from 'lucide-react';
 
 export const App = () => {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, quickDemoLogin } = useAuth();
   const { lastNotification, clearNotification, refreshWallet } = useWallet();
 
-  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' | 'transactions' | 'game'
-  const [activeGame, setActiveGame] = useState(null);
+  const [currentView, setCurrentView] = useState(() => {
+    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    return params && params.get('game') ? 'game' : 'dashboard';
+  });
+  const [activeGame, setActiveGame] = useState(() => {
+    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const gameId = params?.get('game');
+    return gameId ? (GAME_REGISTRY.find((item) => item.id === gameId) || null) : null;
+  });
   const [showAddCreditsModal, setShowAddCreditsModal] = useState(false);
   const [showResetDemoModal, setShowResetDemoModal] = useState(false);
+
+  // Auto-launch game via URL query parameter (e.g. ?game=ludo)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const gameId = params.get('game');
+    if (gameId) {
+      const target = GAME_REGISTRY.find((item) => item.id === gameId);
+      if (target) {
+        if (!isAuthenticated) {
+          quickDemoLogin().then(() => {
+            setActiveGame(target);
+            setCurrentView('game');
+          });
+        } else {
+          setActiveGame(target);
+          setCurrentView('game');
+        }
+      }
+    }
+  }, [isAuthenticated, quickDemoLogin]);
 
   // Switch to game launch
   const handleSelectGame = (game) => {

@@ -12,6 +12,7 @@ import { MinesGame } from './mines/MinesGame.jsx';
 import { RPSGame } from './rps/RPSGame.jsx';
 import { MemoryGame } from './memory/MemoryGame.jsx';
 import { ConnectFourGame } from './connectFour/ConnectFourGame.jsx';
+import { RummyGame } from './rummy/RummyGame.jsx';
 import { GenericArcadeGame } from './quickArcade/GenericArcadeGame.jsx';
 import { AlertCircle, ArrowLeft, ShieldAlert } from 'lucide-react';
 
@@ -25,7 +26,8 @@ const GAME_COMPONENTS = {
   'mines': MinesGame,
   'rps': RPSGame,
   'memory': MemoryGame,
-  'connect-four': ConnectFourGame
+  'connect-four': ConnectFourGame,
+  'rummy': RummyGame
 };
 
 export const GameWrapper = ({
@@ -197,6 +199,7 @@ export const GameWrapper = ({
       user={user}
       entryFee={game.entryFee}
       session={session}
+      onOpenAddCredits={onOpenAddCredits}
     />
   );
 };

@@ -170,17 +170,59 @@ async function runTests() {
   assert(walletService.getBalance(uId) === balBeforeExit, 'Exiting game causes no additional deductions');
   assert(walletService.getTransactions(uId).length === txnCountBeforeExit, 'Exiting game preserves transaction count');
 
-  console.log(cyan('\n--- 8. Ludo Logic Verification ---'));
-  const { canTokenMove, getTokenCoordinate } = await import('./src/games/ludo/ludoLogic.js');
+  console.log(cyan('\n--- 8. Ludo King Logic Verification ---'));
+  const {
+    canTokenMove,
+    getTokenCoordinate,
+    isCoordinateSafe,
+    findCapturableTokens,
+    chooseBotMove
+  } = await import('./src/games/ludo/ludoLogic.js');
   assert(!canTokenMove({ id: 'r0', steps: -1 }, 1), 'Cannot leave yard on roll of 1');
   assert(canTokenMove({ id: 'r0', steps: -1 }, 6), 'Can leave yard on roll of 6');
   assert(canTokenMove({ id: 'r0', steps: 10 }, 4), 'Active token advances by 4');
   assert(canTokenMove({ id: 'r0', steps: 54 }, 2), 'Token at 54 can reach 56');
   assert(!canTokenMove({ id: 'r0', steps: 55 }, 2), 'Token cannot overshoot home');
 
-  console.log(cyan('\n--- 9. 16 Games Registry & Categories Verification ---'));
+  // 4 Player coordinates & home paths
+  const redStart = getTokenCoordinate('red', 0, 0);
+  assert(redStart.r === 6 && redStart.c === 1, 'Red starts at (6, 1)');
+  const greenStart = getTokenCoordinate('green', 0, 0);
+  assert(greenStart.r === 1 && greenStart.c === 8, 'Green starts at (1, 8)');
+  const yellowStart = getTokenCoordinate('yellow', 0, 0);
+  assert(yellowStart.r === 8 && yellowStart.c === 13, 'Yellow starts at (8, 13)');
+  const blueStart = getTokenCoordinate('blue', 0, 0);
+  assert(blueStart.r === 13 && blueStart.c === 6, 'Blue starts at (13, 6)');
+
+  // Safe zones
+  assert(isCoordinateSafe(6, 1) === true, 'Red start is a safe tile');
+  assert(isCoordinateSafe(2, 6) === true, 'Star tile at (2, 6) is a safe tile');
+  assert(isCoordinateSafe(6, 2) === false, 'Regular track cell (6, 2) is not a safe tile');
+
+  // Token capture check
+  const mockTokens = {
+    red: [{ id: 'r0', steps: 1 }], // at (6, 2)
+    green: [{ id: 'g0', steps: 40 }], // at (6, 2)
+    yellow: [],
+    blue: []
+  };
+  const targetCoord = { r: 6, c: 2 };
+  const captures = findCapturableTokens('green', 'g0', targetCoord, mockTokens);
+  assert(captures.length === 1 && captures[0].token.id === 'r0', 'Landing on regular cell captures opponent token');
+
+  const safeMockTokens = {
+    red: [{ id: 'r0', steps: 0 }], // at Red Start (6, 1) - safe!
+    green: [],
+    yellow: [],
+    blue: []
+  };
+  const safeTarget = { r: 6, c: 1 };
+  const safeCaptures = findCapturableTokens('green', 'g0', safeTarget, safeMockTokens);
+  assert(safeCaptures.length === 0, 'Safe squares protect tokens from capture');
+
+  console.log(cyan('\n--- 9. Games Registry & Categories Verification ---'));
   const { GAME_REGISTRY, CATEGORIES, getGameById } = await import('./src/games/registry.js');
-  assert(GAME_REGISTRY.length === 16, `Registry contains all 16 games (got: ${GAME_REGISTRY.length})`);
+  assert(GAME_REGISTRY.length === 17, `Registry contains all 17 games (got: ${GAME_REGISTRY.length})`);
   assert(CATEGORIES.includes('Board') && CATEGORIES.includes('Sports') && CATEGORIES.includes('Arcade'), 'Categories include Board, Sports, Arcade');
 
   const carrom = getGameById('carrom');
@@ -195,8 +237,55 @@ async function runTests() {
   const knife = getGameById('knife-target');
   assert(knife && knife.entryFee === 40, 'Knife Target is registered with 40 fee');
 
+  const rummy = getGameById('rummy');
+  assert(rummy && rummy.entryFee === 50 && rummy.winReward === 90, 'Indian Rummy is registered with 50 fee and 90 win reward');
+
+  console.log(cyan('\n--- 10. Indian Rummy Logic Verification ---'));
+  const {
+    createRummyDeck,
+    isPureSequence,
+    isSequence,
+    isSet,
+    isCardJoker,
+    validateDeclaration,
+    calculateDeadwood
+  } = await import('./src/games/rummy/rummyLogic.js');
+
+  const deck = createRummyDeck();
+  assert(deck.length === 106, `Rummy deck generates 106 cards (2 decks + 2 printed jokers, got: ${deck.length})`);
+
+  const cutJoker = { suit: '♦', rank: '7', val: 7, points: 7, isPrintedJoker: false };
+  const wildCard = { suit: '♠', rank: '7', val: 7, points: 7, isPrintedJoker: false };
+  assert(isCardJoker(wildCard, cutJoker) === true, 'Matching rank is correctly identified as cut wild joker');
+
+  const pureSeq = [
+    { suit: '♠', rank: '4', val: 4, points: 4, isPrintedJoker: false },
+    { suit: '♠', rank: '5', val: 5, points: 5, isPrintedJoker: false },
+    { suit: '♠', rank: '6', val: 6, points: 6, isPrintedJoker: false }
+  ];
+  assert(isPureSequence(pureSeq) === true, 'Consecutive cards of same suit form a pure sequence');
+
+  const invalidPureWithWild = [
+    { suit: '♠', rank: '4', val: 4, points: 4, isPrintedJoker: false },
+    wildCard, // 7 is wild, but pure seq disallows wild cards
+    { suit: '♠', rank: '6', val: 6, points: 6, isPrintedJoker: false }
+  ];
+  assert(isPureSequence(invalidPureWithWild) === false, 'Pure sequence rejects wild jokers used as substitutes');
+  assert(isSequence(invalidPureWithWild, cutJoker) === true, 'Impure sequence accepts wild jokers');
+
+  const validSet = [
+    { suit: '♠', rank: 'K', val: 13, points: 10, isPrintedJoker: false },
+    { suit: '♥', rank: 'K', val: 13, points: 10, isPrintedJoker: false },
+    { suit: '♣', rank: 'K', val: 13, points: 10, isPrintedJoker: false }
+  ];
+  assert(isSet(validSet, cutJoker) === true, 'Different suits of same rank form a valid set');
+
+  const incompleteHand = [pureSeq, validSet];
+  const declCheck = validateDeclaration(incompleteHand, cutJoker);
+  assert(declCheck.isValid === false, 'Declaration with fewer than 13 cards is rejected');
+
   console.log(cyan('\n========================================='));
-  console.log(`All 16 Games & Scenarios Verified!`);
+  console.log(`All 17 Games & Rummy Scenarios Verified!`);
   console.log(`Total tests passed: ${passed}`);
   console.log(`Total tests failed: ${failed}`);
   console.log(cyan('=========================================\n'));

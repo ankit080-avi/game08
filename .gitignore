@@ -2,5 +2,26 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+.env.*
 .vscode
+.idea
 .DS_Store
+*.log
+
+# Android & Gradle build artifacts
+.gradle/
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/captures/
+android/.idea/
+*.apk
+*.aab
+
+# Scratch and temp files
+scratch/
+temp_*
+.tempmediaStorage/
+

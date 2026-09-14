@@ -4,7 +4,25 @@ import { authService } from '../services/authService';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => authService.getCurrentUser());
+  const [user, setUser] = useState(() => {
+    const existing = authService.getCurrentUser();
+    if (existing) return existing;
+    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    if (params && params.get('game')) {
+      const cleanUsername = 'demo_player';
+      const defaultUser = {
+        id: cleanUsername,
+        username: cleanUsername,
+        fullName: 'Demo Player',
+        avatarId: 'avatar-1',
+        createdAt: new Date().toISOString(),
+        isDemo: true
+      };
+      authService.login({ username: cleanUsername });
+      return defaultUser;
+    }
+    return null;
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {

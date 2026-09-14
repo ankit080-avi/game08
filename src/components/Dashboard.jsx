@@ -36,7 +36,8 @@ import {
   BubbleShooterThumbnail,
   FruitSliceThumbnail,
   ConnectFourThumbnail,
-  RPSThumbnail
+  RPSThumbnail,
+  RummyThumbnail
 } from './GameThumbnails.jsx';
 
 export const Dashboard = ({
@@ -104,6 +105,7 @@ export const Dashboard = ({
       case 'fruit-slice': return <FruitSliceThumbnail />;
       case 'connect-four': return <ConnectFourThumbnail />;
       case 'rps': return <RPSThumbnail />;
+      case 'rummy': return <RummyThumbnail />;
       default: return <LudoThumbnail />;
     }
   };

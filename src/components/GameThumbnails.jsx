@@ -221,29 +221,22 @@ export const ArcheryThumbnail = () => (
   </CardWrapper>
 );
 
-// 9. Knife Target
+// 9. Knife Rain
 export const KnifeTargetThumbnail = () => (
-  <CardWrapper glowColor="rose">
-    <svg viewBox="0 0 200 200" className="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl">
-      <circle cx="100" cy="85" r="50" fill="#78350f" stroke="#b45309" strokeWidth="5" />
-      <circle cx="100" cy="85" r="38" fill="#9a3412" stroke="#ea580c" strokeWidth="2" />
-      <circle cx="100" cy="85" r="22" fill="#78350f" stroke="#b45309" strokeWidth="2" />
-      <circle cx="100" cy="85" r="8" fill="#f59e0b" />
-      <g stroke="#f8fafc" strokeWidth="3" strokeLinecap="round">
-        <line x1="100" y1="20" x2="100" y2="45" />
-        <polygon points="97,20 103,20 100,12" fill="#e2e8f0" />
-      </g>
-      <g stroke="#f8fafc" strokeWidth="3" strokeLinecap="round">
-        <line x1="150" y1="110" x2="135" y2="98" />
-        <polygon points="152,112 148,116 156,118" fill="#e2e8f0" />
-      </g>
-      <g stroke="#38bdf8" strokeWidth="4" strokeLinecap="round">
-        <line x1="100" y1="185" x2="100" y2="148" />
-        <polygon points="96,150 104,150 100,140" fill="#38bdf8" />
-      </g>
-    </svg>
-    <div className="absolute bottom-2 right-2.5 bg-rose-500/20 border border-rose-500/40 text-rose-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
-      <span>🗡️</span><span>KNIFE HIT</span>
+  <CardWrapper glowColor="amber">
+    <div className="relative w-full h-full flex flex-col items-center justify-center">
+      <img
+        src="/games/knife-rain/logo.png"
+        alt="Knife Rain"
+        className="w-28 sm:w-32 h-auto object-contain filter drop-shadow-lg mb-1 group-hover:scale-105 transition-transform"
+      />
+      <div className="flex items-center gap-2">
+        <img src="/games/knife-rain/knife_default.png" alt="" className="w-4 h-11 object-contain -rotate-12 drop-shadow" />
+        <img src="/games/knife-rain/apple.png" alt="" className="w-5 h-6 object-contain drop-shadow" />
+      </div>
+    </div>
+    <div className="absolute bottom-2 right-2.5 bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
+      <span>🗡️</span><span>KNIFE RAIN</span>
     </div>
   </CardWrapper>
 );
@@ -393,3 +386,64 @@ export const RPSThumbnail = () => (
     </div>
   </CardWrapper>
 );
+
+// 17. Indian Rummy (RummyCircle Classic)
+export const RummyThumbnail = () => (
+  <CardWrapper glowColor="emerald">
+    <svg viewBox="0 0 200 200" className="w-32 h-32 sm:w-36 sm:h-36 drop-shadow-xl">
+      <defs>
+        <radialGradient id="feltGrad" cx="50%" cy="50%" r="60%">
+          <stop offset="0%" stopColor="#0a5c32" />
+          <stop offset="100%" stopColor="#042a16" />
+        </radialGradient>
+      </defs>
+      {/* Oval Felt Table */}
+      <ellipse cx="100" cy="100" rx="90" ry="70" fill="url(#feltGrad)" stroke="#d97706" strokeWidth="3" />
+      <ellipse cx="100" cy="100" rx="84" ry="64" fill="none" stroke="#f59e0b" strokeWidth="1" strokeDasharray="4 2" opacity="0.6" />
+
+      {/* Fanned Cards */}
+      {/* Card 1: 10 Spades (tilted left) */}
+      <g transform="translate(60, 65) rotate(-18)">
+        <rect x="0" y="0" width="38" height="56" rx="4" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" />
+        <text x="4" y="14" fontSize="10" fontWeight="900" fill="#0f172a">10</text>
+        <text x="4" y="24" fontSize="10" fill="#0f172a">♠</text>
+        <text x="14" y="36" fontSize="16" fill="#0f172a">♠</text>
+      </g>
+
+      {/* Card 2: J Spades (tilted slight left) */}
+      <g transform="translate(75, 58) rotate(-6)">
+        <rect x="0" y="0" width="38" height="56" rx="4" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" />
+        <text x="4" y="14" fontSize="11" fontWeight="900" fill="#0f172a">J</text>
+        <text x="4" y="24" fontSize="10" fill="#0f172a">♠</text>
+        <text x="14" y="36" fontSize="16" fill="#0f172a">♠</text>
+      </g>
+
+      {/* Card 3: Q Hearts (tilted slight right) */}
+      <g transform="translate(92, 58) rotate(8)">
+        <rect x="0" y="0" width="38" height="56" rx="4" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" />
+        <text x="4" y="14" fontSize="11" fontWeight="900" fill="#dc2626">Q</text>
+        <text x="4" y="24" fontSize="10" fill="#dc2626">♥</text>
+        <text x="14" y="36" fontSize="16" fill="#dc2626">♥</text>
+      </g>
+
+      {/* Card 4: K Hearts / Cut Wild Joker (tilted right) */}
+      <g transform="translate(108, 65) rotate(22)">
+        <rect x="0" y="0" width="38" height="56" rx="4" fill="#ffffff" stroke="#f59e0b" strokeWidth="2" />
+        <text x="4" y="14" fontSize="11" fontWeight="900" fill="#dc2626">K</text>
+        <text x="4" y="24" fontSize="10" fill="#dc2626">♥</text>
+        <text x="14" y="36" fontSize="16" fill="#dc2626">♥</text>
+        {/* Wild Star badge */}
+        <circle cx="28" cy="10" r="6" fill="#f59e0b" />
+        <text x="25" y="13" fontSize="8" fontWeight="900" fill="#000">★</text>
+      </g>
+
+      {/* Pure Sec Badge on table */}
+      <rect x="62" y="128" width="76" height="18" rx="9" fill="#065f46" stroke="#10b981" strokeWidth="1.5" />
+      <text x="100" y="140" fontSize="9" fontWeight="900" fill="#6ee7b7" textAnchor="middle" letterSpacing="1">PURE SEC ✓</text>
+    </svg>
+    <div className="absolute bottom-2 right-2.5 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1">
+      <span>🎴</span><span>RUMMY</span>
+    </div>
+  </CardWrapper>
+);
+

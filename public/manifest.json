@@ -1,0 +1,18 @@
+﻿{
+  "short_name": "Ludo",
+  "name": "Ludo Classic - Game08",
+  "description": "Play classic Ludo board game online and offline",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "/game08/",
+  "scope": "/game08/",
+  "background_color": "#070a13",
+  "theme_color": "#1e3a8a",
+  "display": "standalone",
+  "orientation": "portrait"
+}

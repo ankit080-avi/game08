@@ -7,26 +7,24 @@ import {
   Volume2,
   VolumeX,
   Trophy,
-  Zap,
-  Flame,
-  Award,
   ArrowRight,
   ShieldAlert,
-  Sparkles
+  Flame,
+  Zap
 } from 'lucide-react';
 import { audioManager } from './AudioManager';
 import { levelManager } from './LevelManager';
 import { ParticleManager } from './ParticleManager';
 import { GameRenderer } from './GameRenderer';
 
-// Virtual canvas dimensions (portrait arcade cabinet)
+// Virtual portrait canvas dimensions
 const CANVAS_WIDTH = 380;
 const CANVAS_HEIGHT = 600;
 const TARGET_CX = CANVAS_WIDTH / 2; // 190
-const TARGET_CY = 190;
-const TARGET_RADIUS = 70;
-const READY_KNIFE_Y = 510;
-const THROW_SPEED = 26;
+const TARGET_CY = 195;
+const TARGET_RADIUS = 76;
+const READY_KNIFE_Y = 515;
+const THROW_SPEED = 28;
 
 export const KnifeTargetGame = ({
   game,
@@ -40,52 +38,58 @@ export const KnifeTargetGame = ({
   const [gameState, setGameState] = useState('menu');
   const [currentLevel, setCurrentLevel] = useState(1);
   const [score, setScore] = useState(0);
+  const [applesCount, setApplesCount] = useState(() => {
+    try {
+      return parseInt(localStorage.getItem('knife_rain_apples') || '0', 10);
+    } catch (_) {
+      return 0;
+    }
+  });
   const [highScore, setHighScore] = useState(() => {
     try {
-      return parseInt(localStorage.getItem('blade_target_high_score') || '0', 10);
+      return parseInt(localStorage.getItem('knife_rain_high_score') || '0', 10);
     } catch (_) {
       return 0;
     }
   });
   const [isMuted, setIsMuted] = useState(false);
-  const [knivesRemaining, setKnivesRemaining] = useState(6);
-  const [totalKnivesForStage, setTotalKnivesForStage] = useState(6);
+  const [knivesRemaining, setKnivesRemaining] = useState(7);
+  const [totalKnivesForStage, setTotalKnivesForStage] = useState(7);
   const [activeLevelConfig, setActiveLevelConfig] = useState(null);
+  const [showBossBanner, setShowBossBanner] = useState(false);
 
   const canvasRef = useRef(null);
-  const requestRef = useRef(null);
   const rendererRef = useRef(null);
   const particlesRef = useRef(new ParticleManager());
   const touchHandledRef = useRef(false);
 
-  // Mutable game simulation state (ref for 60fps loop without React re-render lag)
+  // 60FPS simulation ref to avoid React render lag
   const simRef = useRef({
     rotation: 0,
     rotSpeed: 0.03,
     direction: 1,
     frameCount: 0,
-    stuckKnives: [], // Array of angle numbers in degrees [0..359]
-    flyingKnife: null, // { y, vy, vx, isColliding, tumbleAngle, vRot }
+    stuckKnives: [],
+    apples: [],
+    flyingKnife: null,
     isShattered: false,
-    shatterTimer: 0,
     levelConfig: null,
-    knivesLeft: 6,
+    knivesLeft: 7,
     score: 0,
+    applesCollected: 0,
     gameOverReported: false
   });
 
-  // Toggle Audio Mute
   const handleToggleMute = useCallback(() => {
     const muted = audioManager.toggleMute();
     setIsMuted(muted);
   }, []);
 
-  // Update High Score helper
   const checkAndUpdateHighScore = useCallback((currentScore) => {
     setHighScore((prev) => {
       if (currentScore > prev) {
         try {
-          localStorage.setItem('blade_target_high_score', currentScore.toString());
+          localStorage.setItem('knife_rain_high_score', currentScore.toString());
         } catch (_) {}
         return currentScore;
       }
@@ -93,7 +97,17 @@ export const KnifeTargetGame = ({
     });
   }, []);
 
-  // Initialize a specific level
+  const addApples = useCallback((count = 2) => {
+    setApplesCount((prev) => {
+      const next = prev + count;
+      try {
+        localStorage.setItem('knife_rain_apples', next.toString());
+      } catch (_) {}
+      return next;
+    });
+  }, []);
+
+  // Initialize a specific stage
   const initLevel = useCallback((lvlNum, keepScore = true) => {
     const config = levelManager.getLevelConfig(lvlNum);
     setActiveLevelConfig(config);
@@ -107,14 +121,22 @@ export const KnifeTargetGame = ({
     sim.levelConfig = config;
     sim.knivesLeft = config.knivesRequired;
     sim.stuckKnives = [...config.initialKnives];
+    sim.apples = [...config.apples];
     sim.flyingKnife = null;
     sim.isShattered = false;
-    sim.shatterTimer = 0;
     sim.gameOverReported = false;
     sim.rotation = 0;
     sim.direction = 1;
     sim.frameCount = 0;
     sim.rotSpeed = config.baseSpeed;
+
+    if (config.boss) {
+      setShowBossBanner(true);
+      audioManager.playBossStart();
+      setTimeout(() => setShowBossBanner(false), 2200);
+    } else {
+      setShowBossBanner(false);
+    }
 
     if (!keepScore) {
       sim.score = 0;
@@ -122,26 +144,23 @@ export const KnifeTargetGame = ({
     }
   }, []);
 
-  // Start fresh game from Level 1
   const startNewGame = useCallback(() => {
+    audioManager.playButton();
     initLevel(1, false);
     setGameState('playing');
   }, [initLevel]);
 
-  // Restart current run
   const handleRestart = useCallback(() => {
     startNewGame();
   }, [startNewGame]);
 
-  // Throw knife handler
   const handleThrow = useCallback(() => {
     const sim = simRef.current;
     if (gameState !== 'playing') return;
     if (sim.isShattered) return;
-    if (sim.flyingKnife) return; // Wait for current knife to reach target
+    if (sim.flyingKnife) return; // wait for current knife to reach target
     if (sim.knivesLeft <= 0) return;
 
-    // Launch knife upwards
     sim.flyingKnife = {
       x: TARGET_CX,
       y: READY_KNIFE_Y,
@@ -157,14 +176,13 @@ export const KnifeTargetGame = ({
     setKnivesRemaining(sim.knivesLeft);
   }, [gameState]);
 
-  // Mobile / Touch interaction handler to prevent double-fires
   const handleInteraction = useCallback((e) => {
     if (e) {
       if (e.type === 'touchstart') {
         touchHandledRef.current = true;
         setTimeout(() => {
           touchHandledRef.current = false;
-        }, 300);
+        }, 250);
       } else if (e.type === 'click' && touchHandledRef.current) {
         return;
       }
@@ -172,11 +190,10 @@ export const KnifeTargetGame = ({
     handleThrow();
   }, [handleThrow]);
 
-  // Advance to next stage
   const handleNextStage = useCallback(() => {
+    audioManager.playButton();
     const nextLvl = currentLevel + 1;
     if (nextLvl > 5) {
-      // Victory! Cleared all 5 stages!
       setGameState('victory');
       confetti({ particleCount: 160, spread: 90, origin: { y: 0.55 } });
       if (onWin) {
@@ -205,51 +222,61 @@ export const KnifeTargetGame = ({
       const sim = simRef.current;
       sim.frameCount++;
 
-      // 1. Update Target Rotation Dynamics based on Level Pattern
+      // 1. Target Rotation Dynamics
       if (!sim.isShattered && sim.levelConfig) {
         const pattern = sim.levelConfig.pattern;
         if (pattern === 'constant') {
           sim.rotation += sim.rotSpeed;
         } else if (pattern === 'reversing') {
-          // Smooth periodic reversal
-          sim.rotation += Math.sin(sim.frameCount * 0.025) * sim.rotSpeed * 1.5;
+          sim.rotation += Math.sin(sim.frameCount * 0.025) * sim.rotSpeed * 1.6;
         } else if (pattern === 'oscillate') {
-          // Accelerates and decelerates with high tension
-          sim.rotation += (Math.cos(sim.frameCount * 0.035) + 0.3) * sim.rotSpeed * 1.4;
+          sim.rotation += (Math.cos(sim.frameCount * 0.035) + 0.3) * sim.rotSpeed * 1.5;
         } else if (pattern === 'erratic') {
-          // Boss mode: bursts of speed with sudden stops
           const cycle = sim.frameCount % 180;
           if (cycle < 60) {
-            sim.rotation += sim.rotSpeed * 1.8;
+            sim.rotation += sim.rotSpeed * 1.9;
           } else if (cycle < 90) {
-            sim.rotation += sim.rotSpeed * 0.3;
+            sim.rotation += sim.rotSpeed * 0.2;
           } else if (cycle < 140) {
-            sim.rotation -= sim.rotSpeed * 1.6;
+            sim.rotation -= sim.rotSpeed * 1.7;
           } else {
-            sim.rotation += sim.rotSpeed * 0.5;
+            sim.rotation += sim.rotSpeed * 0.4;
           }
         } else {
           sim.rotation += sim.rotSpeed;
         }
       }
 
-      // 2. Update Flying Knife Physics
+      // 2. Flying Knife Physics & Collision
       if (sim.flyingKnife) {
         const fk = sim.flyingKnife;
 
         if (!fk.isColliding) {
           fk.y += fk.vy;
 
-          // Impact threshold: knife tip hits outer rim of target
-          // Target bottom rim = TARGET_CY + TARGET_RADIUS = 190 + 70 = 260
-          // Sprite tip is 52px above fk.y. When fk.y <= 260 + 4, knife embeds!
-          if (fk.y <= TARGET_CY + TARGET_RADIUS + 4) {
-            // Collision Detection against already stuck blades
-            // World hit angle at bottom of log is 90 degrees (Math.PI / 2)
-            // Relative angle on the rotating log:
+          // Check if tip strikes the target perimeter (TARGET_CY + TARGET_RADIUS)
+          if (fk.y <= TARGET_CY + TARGET_RADIUS + 2) {
+            // Hit angle in target's local rotating reference frame
             const hitAngleDeg = ((90 - (sim.rotation * 180 / Math.PI)) % 360 + 360) % 360;
 
-            // Angular collision check: 16 degrees tolerance
+            // A) Check Apple Slices (tolerance ~15 deg)
+            const appleHitIndex = sim.apples.findIndex((appleAngle) => {
+              let diff = Math.abs(appleAngle - hitAngleDeg) % 360;
+              if (diff > 180) diff = 360 - diff;
+              return diff < 15;
+            });
+
+            if (appleHitIndex !== -1) {
+              // Slice Apple!
+              audioManager.playApple();
+              particles.createAppleSlice(TARGET_CX, TARGET_CY + TARGET_RADIUS);
+              sim.apples.splice(appleHitIndex, 1);
+              sim.score += 2;
+              setScore(sim.score);
+              addApples(2);
+            }
+
+            // B) Check Knife Clash (tolerance ~16 deg)
             const hasClashed = sim.stuckKnives.some((stuckAngle) => {
               let diff = Math.abs(stuckAngle - hitAngleDeg) % 360;
               if (diff > 180) diff = 360 - diff;
@@ -257,18 +284,16 @@ export const KnifeTargetGame = ({
             });
 
             if (hasClashed) {
-              // METAL CLASH!
+              // Metal Clash!
               audioManager.playClash();
-              renderer.triggerShake(12);
-              particles.createMetalSparks(TARGET_CX, TARGET_CY + TARGET_RADIUS, 32);
+              renderer.triggerShake(14);
+              particles.createMetalSparks(TARGET_CX, TARGET_CY + TARGET_RADIUS, 30);
 
-              // Knife deflects backwards
               fk.isColliding = true;
-              fk.vy = 7;
+              fk.vy = 8;
               fk.vx = (Math.random() > 0.5 ? 1 : -1) * (3 + Math.random() * 3);
               fk.vRot = (Math.random() > 0.5 ? 1 : -1) * 0.22;
 
-              // Game Over
               setTimeout(() => {
                 if (!sim.gameOverReported) {
                   sim.gameOverReported = true;
@@ -276,58 +301,69 @@ export const KnifeTargetGame = ({
                   setGameState('game_over');
                   checkAndUpdateHighScore(sim.score);
                 }
-              }, 450);
+              }, 480);
             } else {
-              // CLEAN HIT! Blade sticks deep into the wood
+              // Clean Hit into Target!
               audioManager.playImpact();
               renderer.triggerShake(5);
-              particles.createImpactSplinters(TARGET_CX, TARGET_CY + TARGET_RADIUS, 16);
+              particles.createImpactSplinters(TARGET_CX, TARGET_CY + TARGET_RADIUS, 14);
 
               sim.stuckKnives.push(hitAngleDeg);
-              sim.score += 20;
+              sim.score += 1;
               setScore(sim.score);
               checkAndUpdateHighScore(sim.score);
 
-              // Check if all knives for this level are placed
+              // Check if all knives placed for this stage
               if (sim.knivesLeft === 0) {
-                // STAGE CLEARED!
                 sim.isShattered = true;
                 audioManager.playLevelComplete();
                 particles.createTargetShatter(TARGET_CX, TARGET_CY, TARGET_RADIUS);
-                renderer.triggerShake(14);
-                sim.score += 100; // Stage bonus
+                renderer.triggerShake(16);
+                sim.score += 50; // Stage bonus
                 setScore(sim.score);
                 checkAndUpdateHighScore(sim.score);
 
                 setTimeout(() => {
                   setGameState('stage_clear');
-                  confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+                  confetti({ particleCount: 90, spread: 75, origin: { y: 0.6 } });
                 }, 750);
               }
 
-              // Ready next throw
               sim.flyingKnife = null;
             }
           }
         } else {
-          // Deflecting falling knife animation
+          // Deflecting falling knife
           fk.x += fk.vx;
           fk.y += fk.vy;
-          fk.vy += 0.45; // Gravity
+          fk.vy += 0.45;
           fk.tumbleAngle += fk.vRot;
         }
       }
 
-      // 3. Update Particles & Shatter Pieces
+      // 3. Update Particles
       particles.update();
 
-      // 4. Render Frame to Canvas
+      // 4. Render Canvas Frame
       renderer.clear();
       renderer.renderBackground(CANVAS_WIDTH, CANVAS_HEIGHT);
 
-      // Render rotating target log (if not shattered)
+      // Render rotating target
       if (!sim.isShattered) {
-        renderer.renderTarget(TARGET_CX, TARGET_CY, TARGET_RADIUS, sim.rotation);
+        renderer.renderTarget(
+          TARGET_CX,
+          TARGET_CY,
+          TARGET_RADIUS,
+          sim.rotation,
+          sim.levelConfig?.targetType || 'wood'
+        );
+        renderer.renderApples(
+          TARGET_CX,
+          TARGET_CY,
+          TARGET_RADIUS,
+          sim.rotation,
+          sim.apples
+        );
         renderer.renderStuckKnives(
           TARGET_CX,
           TARGET_CY,
@@ -337,7 +373,7 @@ export const KnifeTargetGame = ({
         );
       }
 
-      // Render flying knife or deflecting knife
+      // Render flying knife
       if (sim.flyingKnife) {
         renderer.renderFlyingKnife(
           sim.flyingKnife.x,
@@ -347,92 +383,64 @@ export const KnifeTargetGame = ({
         );
       }
 
-      // Render ready knife at bottom (subtle idle bobbing animation)
+      // Render ready knife at bottom
       if (gameState === 'playing' && !sim.flyingKnife && sim.knivesLeft > 0 && !sim.isShattered) {
         const idleBob = Math.sin(sim.frameCount * 0.08) * 3;
         renderer.renderReadyKnife(TARGET_CX, READY_KNIFE_Y, idleBob);
       }
 
-      // Render all wood splinters, sparks, and shatter pieces
-      particles.render(renderer.ctx);
+      // Render all splinters, sparks, shattered pieces, and sliced apples
+      particles.render(renderer.ctx, renderer.assets);
 
       animId = requestAnimationFrame(gameLoop);
     };
 
     animId = requestAnimationFrame(gameLoop);
-
     return () => {
       if (animId) cancelAnimationFrame(animId);
     };
-  }, [gameState, checkAndUpdateHighScore]);
+  }, [gameState, checkAndUpdateHighScore, addApples]);
 
-  // Initial Level Setup on mount
   useEffect(() => {
     initLevel(1, false);
   }, [initLevel]);
 
   return (
-    <div className="w-full max-w-md mx-auto min-h-[640px] flex flex-col items-center justify-center p-2 sm:p-4 select-none">
-      {/* Arcade Cabinet Shell */}
-      <div className="relative w-full max-w-[390px] rounded-3xl bg-slate-950 border border-slate-800 shadow-2xl overflow-hidden flex flex-col">
-        {/* Top Mobile Arcade HUD Bar */}
-        <div className="flex items-center justify-between px-3.5 py-2.5 bg-slate-900/90 border-b border-slate-800/80 backdrop-blur z-20">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-500/20 to-orange-500/20 border border-rose-500/40 flex items-center justify-center text-base shadow-sm">
-              🗡️
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-black tracking-wider text-white uppercase">
-                  {activeLevelConfig?.boss ? '👹 BOSS STAGE' : `STAGE ${currentLevel}/5`}
-                </span>
-                {activeLevelConfig?.boss && (
-                  <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-rose-600 text-white animate-pulse">
-                    DANGER
-                  </span>
-                )}
-              </div>
-              <p className="text-[10px] text-slate-400 font-medium">
-                {activeLevelConfig?.name || 'Target Range'}
-              </p>
-            </div>
+    <div className="w-full max-w-md mx-auto min-h-[640px] flex flex-col items-center justify-center p-2 select-none">
+      {/* Knife Rain Outer Shell */}
+      <div className="relative w-full max-w-[390px] rounded-3xl bg-[#040e16] border-2 border-slate-800/80 shadow-2xl overflow-hidden flex flex-col">
+        
+        {/* Top Header Utilities (Mute, Session ID, Exit) */}
+        <div className="flex items-center justify-between px-3 py-2 bg-slate-950/70 border-b border-slate-800/60 z-20">
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-mono">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-slate-300 font-semibold">{session?.sessionId || 'GSESS-KNIFE'}</span>
           </div>
 
-          {/* Right Controls: Score Badge, Mute, Exit */}
           <div className="flex items-center gap-1.5">
-            {/* Live Score Pill */}
-            <div className="px-2.5 py-1 rounded-xl bg-slate-800/90 border border-slate-700/60 flex items-center gap-1 text-xs">
-              <Trophy className="w-3.5 h-3.5 text-amber-400" />
-              <span className="font-mono font-bold text-emerald-400">{score}</span>
-            </div>
-
-            {/* Audio Toggle */}
             <button
               onClick={handleToggleMute}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition cursor-pointer min-h-[38px] min-w-[38px] flex items-center justify-center"
+              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition cursor-pointer min-h-[34px] min-w-[34px] flex items-center justify-center"
               title={isMuted ? 'Unmute Sound' : 'Mute Sound'}
-              aria-label="Toggle Audio"
             >
               {isMuted ? <VolumeX className="w-3.5 h-3.5 text-rose-400" /> : <Volume2 className="w-3.5 h-3.5 text-slate-200" />}
             </button>
 
-            {/* Exit to Platform */}
             <button
               onClick={onExit}
-              className="p-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 transition cursor-pointer min-h-[38px] min-w-[38px] flex items-center justify-center"
-              title="Exit Game"
-              aria-label="Exit Game"
+              className="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-bold transition cursor-pointer min-h-[34px] flex items-center gap-1"
             >
-              <LogOut className="w-3.5 h-3.5" />
+              <LogOut className="w-3 h-3" />
+              <span>Exit</span>
             </button>
           </div>
         </div>
 
-        {/* Central Arcade Gameplay Viewport */}
+        {/* Main Viewport Container */}
         <div
           onClick={handleInteraction}
           onTouchStart={handleInteraction}
-          className="relative w-full aspect-[380/600] max-h-[600px] bg-[#050d14] flex items-center justify-center cursor-crosshair overflow-hidden touch-manipulation"
+          className="relative w-full aspect-[380/600] max-h-[600px] bg-[#03111c] flex items-center justify-center cursor-pointer overflow-hidden touch-manipulation"
         >
           {/* Main 60FPS HTML5 Canvas */}
           <canvas
@@ -442,110 +450,175 @@ export const KnifeTargetGame = ({
             className="w-full h-full object-contain"
           />
 
-          {/* Left Vertical Knives Remaining Indicator Stack */}
+          {/* ========================================================== */}
+          {/* AUTHENTIC KNIFE RAIN TOP HUD                              */}
+          {/* ========================================================== */}
           {gameState === 'playing' && (
-            <div className="absolute left-3 bottom-20 flex flex-col-reverse gap-1.5 z-10 pointer-events-none">
+            <div className="absolute top-3 left-0 right-0 px-4 flex items-start justify-between pointer-events-none z-10">
+              {/* Top Left: Score */}
+              <div className="flex flex-col">
+                <span className="text-4xl font-black text-white tracking-tight drop-shadow-[0_3px_6px_rgba(0,0,0,0.9)]">
+                  {score}
+                </span>
+              </div>
+
+              {/* Top Center: Stage Dots Indicator */}
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex items-center gap-1.5 bg-slate-950/60 backdrop-blur-sm px-2.5 py-1 rounded-full border border-slate-700/50 shadow-md">
+                  {[1, 2, 3, 4, 5].map((lvl) => {
+                    const isPassed = lvl < currentLevel;
+                    const isCurrent = lvl === currentLevel;
+                    const isBoss = lvl === 5;
+
+                    return (
+                      <div key={lvl} className="flex items-center justify-center">
+                        {isBoss ? (
+                          <div
+                            className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                              isCurrent
+                                ? 'scale-125 drop-shadow-[0_0_8px_rgba(244,63,94,0.9)]'
+                                : isPassed
+                                ? 'opacity-60'
+                                : 'opacity-30'
+                            }`}
+                          >
+                            <img
+                              src="/games/knife-rain/boss_skull.png"
+                              alt="Boss"
+                              className="w-4 h-4 object-contain"
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            className={`w-2.5 h-2.5 rounded-full transition-all ${
+                              isCurrent
+                                ? 'bg-amber-400 scale-125 shadow-[0_0_6px_rgba(251,191,36,0.9)]'
+                                : isPassed
+                                ? 'bg-emerald-400'
+                                : 'bg-slate-600/70'
+                            }`}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <span className={`text-[11px] font-black uppercase tracking-wider drop-shadow-md ${activeLevelConfig?.boss ? 'text-rose-400 animate-pulse' : 'text-slate-300'}`}>
+                  {activeLevelConfig?.name || `STAGE ${currentLevel}`}
+                </span>
+              </div>
+
+              {/* Top Right: Apple Counter */}
+              <div className="flex items-center gap-1.5 bg-slate-950/60 backdrop-blur-sm px-2.5 py-1 rounded-full border border-slate-700/50 shadow-md">
+                <img
+                  src="/games/knife-rain/apple.png"
+                  alt="Apples"
+                  className="w-4 h-4 object-contain"
+                />
+                <span className="font-mono font-bold text-amber-300 text-sm drop-shadow">
+                  {applesCount}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Left Vertical Knives Stack */}
+          {gameState === 'playing' && (
+            <div className="absolute left-4 bottom-20 flex flex-col-reverse gap-1.5 z-10 pointer-events-none">
               {Array.from({ length: totalKnivesForStage }).map((_, idx) => {
                 const isReady = idx < knivesRemaining;
                 return (
                   <div
                     key={idx}
-                    className={`w-3.5 h-7 rounded-sm flex items-center justify-center transition-all duration-200 ${
+                    className={`w-4 h-6 flex items-center justify-center transition-all duration-150 ${
                       isReady
-                        ? 'opacity-100 scale-100 drop-shadow-[0_0_4px_rgba(56,189,248,0.7)]'
-                        : 'opacity-20 scale-75'
+                        ? 'opacity-100 scale-100 drop-shadow-[0_0_5px_rgba(56,189,248,0.8)]'
+                        : 'opacity-15 scale-75 grayscale'
                     }`}
                   >
-                    <svg viewBox="0 0 14 36" className="w-full h-full">
-                      <path
-                        d="M 7 2 L 11 12 L 10 24 L 4 24 L 3 12 Z"
-                        fill={isReady ? '#e0f2fe' : '#475569'}
-                        stroke={isReady ? '#38bdf8' : '#334155'}
-                        strokeWidth="1"
-                      />
-                      {/* Guard */}
-                      <rect x="2" y="24" width="10" height="3" rx="1" fill="#f59e0b" />
-                      {/* Handle */}
-                      <rect x="5" y="27" width="4" height="8" rx="1" fill="#1e293b" />
-                    </svg>
+                    <img
+                      src="/games/knife-rain/knife_icon.png"
+                      alt="Knife"
+                      className="w-full h-full object-contain"
+                    />
                   </div>
                 );
               })}
             </div>
           )}
 
-          {/* Bottom Tap to Throw Action Pulse Target */}
+          {/* Boss Incoming Dramatic Banner */}
+          {showBossBanner && (
+            <div className="absolute top-1/3 left-0 right-0 py-3 bg-gradient-to-r from-rose-900/90 via-red-600/90 to-rose-900/90 border-y-2 border-amber-400 flex flex-col items-center justify-center z-20 shadow-2xl animate-pulse">
+              <span className="text-[11px] font-black text-amber-300 tracking-widest uppercase">
+                WARNING
+              </span>
+              <h2 className="text-2xl font-black text-white tracking-widest uppercase drop-shadow-lg">
+                BOSS STAGE!
+              </h2>
+            </div>
+          )}
+
+          {/* Bottom Tap to Throw Guide */}
           {gameState === 'playing' && (
-            <div className="absolute bottom-3 left-0 right-0 px-6 z-10 flex flex-col items-center pointer-events-none">
-              <div className="w-full max-w-[260px] py-2.5 px-4 rounded-2xl bg-gradient-to-r from-rose-500/20 via-orange-500/30 to-rose-500/20 border border-orange-500/40 backdrop-blur flex items-center justify-center gap-2 shadow-lg animate-pulse">
-                <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
-                <span className="text-[11px] font-black text-amber-200 tracking-wider uppercase">
-                  Tap Anywhere to Strike
-                </span>
+            <div className="absolute bottom-4 left-0 right-0 px-6 z-10 flex flex-col items-center pointer-events-none">
+              <div className="px-4 py-1.5 rounded-full bg-slate-950/60 border border-slate-700/60 backdrop-blur text-[11px] font-bold text-slate-300 flex items-center gap-1.5 shadow-lg animate-pulse">
+                <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                <span>TAP ANYWHERE TO THROW</span>
               </div>
             </div>
           )}
 
           {/* ========================================================== */}
-          {/* OVERLAY: START MENU                                        */}
+          {/* OVERLAY: START MENU (1:1 KNIFE RAIN AESTHETIC)            */}
           {/* ========================================================== */}
           {gameState === 'menu' && (
-            <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-30 animate-fadeIn">
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-rose-600 via-orange-500 to-amber-400 p-0.5 shadow-2xl shadow-rose-600/40 mb-4 animate-bounce">
-                <div className="w-full h-full rounded-[22px] bg-slate-950 flex items-center justify-center text-4xl">
-                  🗡️
-                </div>
+            <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center z-30 animate-fadeIn">
+              {/* Authentic Knife Rain Logo */}
+              <div className="w-64 max-w-full mb-6 filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.8)] animate-bounce">
+                <img
+                  src="/games/knife-rain/logo.png"
+                  alt="Knife Rain"
+                  className="w-full h-auto object-contain"
+                />
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-wider mb-1 uppercase bg-gradient-to-r from-amber-200 via-white to-orange-200 bg-clip-text text-transparent">
-                Blade Target
-              </h1>
-              <p className="text-xs font-semibold text-rose-400 uppercase tracking-widest mb-4">
-                Arcade Wood Master
-              </p>
-
-              {/* High Score and Session Badges */}
-              <div className="w-full max-w-[260px] bg-slate-900/90 border border-slate-800 rounded-2xl p-3 mb-5 shadow-inner">
-                <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-                  <span className="flex items-center gap-1">
+              {/* Best Score & Apple Stats Card */}
+              <div className="w-full max-w-[240px] bg-slate-900/90 border border-slate-800 rounded-2xl p-3 mb-6 shadow-xl">
+                <div className="flex items-center justify-between text-xs text-slate-400 mb-1.5">
+                  <span className="flex items-center gap-1 font-semibold">
                     <Trophy className="w-3.5 h-3.5 text-amber-400" /> Best Score:
                   </span>
-                  <span className="font-mono font-bold text-amber-400">{highScore} pts</span>
+                  <span className="font-mono font-bold text-amber-400 text-sm">{highScore}</span>
                 </div>
-                <div className="flex items-center justify-between text-xs text-slate-400">
+                <div className="flex items-center justify-between text-xs text-slate-400 mb-1.5">
+                  <span className="flex items-center gap-1 font-semibold">
+                    <img src="/games/knife-rain/apple.png" alt="" className="w-3.5 h-3.5" /> Apples:
+                  </span>
+                  <span className="font-mono font-bold text-rose-400 text-sm">{applesCount}</span>
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800">
                   <span className="flex items-center gap-1">
-                    <Flame className="w-3.5 h-3.5 text-orange-400" /> Entry Fee:
+                    <Flame className="w-3 h-3 text-orange-400" /> Entry Fee:
                   </span>
                   <span className="font-mono font-bold text-cyan-400">{entryFee} Credits</span>
                 </div>
               </div>
 
-              {/* How to Play Bullet Card */}
-              <div className="w-full max-w-[260px] text-left text-[11px] text-slate-300 bg-slate-900/60 border border-slate-800/80 rounded-xl p-3 mb-6 space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-amber-400">🎯</span>
-                  <span>Tap screen to throw blades upwards</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-rose-400">⚡</span>
-                  <span>Avoid hitting existing embedded blades</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-400">🪵</span>
-                  <span>Shatter all 5 logs to defeat the Boss</span>
-                </div>
-              </div>
-
-              {/* Tap to Play Button */}
+              {/* Authentic Play Pill Button */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   startNewGame();
                 }}
-                className="w-full max-w-[260px] min-h-[52px] py-3.5 px-6 rounded-2xl bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 text-white font-black text-sm tracking-wider uppercase flex items-center justify-center gap-2 shadow-xl shadow-orange-500/30 active:scale-95 transition-all cursor-pointer"
+                className="w-44 max-w-full hover:scale-105 active:scale-95 transition-all filter drop-shadow-[0_8px_20px_rgba(34,197,94,0.5)] cursor-pointer"
+                aria-label="Play Knife Rain"
               >
-                <Play className="w-4 h-4 fill-white" />
-                <span>Play Now</span>
+                <img
+                  src="/games/knife-rain/btn_play.png"
+                  alt="Play"
+                  className="w-full h-auto object-contain"
+                />
               </button>
             </div>
           )}
@@ -554,28 +627,28 @@ export const KnifeTargetGame = ({
           {/* OVERLAY: STAGE CLEARED                                     */}
           {/* ========================================================== */}
           {gameState === 'stage_clear' && (
-            <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-30 animate-fadeIn">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-3xl mb-3 shadow-lg shadow-emerald-500/20">
+            <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-30 animate-fadeIn">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-2xl mb-2 shadow-lg shadow-emerald-500/20">
                 ✨
               </div>
 
-              <span className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-1">
-                Log Shattered!
+              <span className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-0.5">
+                Target Shattered!
               </span>
               <h2 className="text-2xl font-black text-white mb-1">
                 STAGE {currentLevel} CLEARED
               </h2>
-              <p className="text-xs text-amber-300 font-bold mb-5">
-                +100 Stage Bonus Added!
+              <p className="text-xs text-amber-300 font-bold mb-4">
+                +50 Stage Bonus Added!
               </p>
 
-              <div className="w-full max-w-[240px] bg-slate-900 border border-slate-800 rounded-2xl p-3.5 mb-6 text-xs">
+              <div className="w-full max-w-[230px] bg-slate-900 border border-slate-800 rounded-2xl p-3 mb-5 text-xs">
                 <div className="flex justify-between text-slate-300 mb-1">
-                  <span>Current Score:</span>
-                  <span className="font-mono font-bold text-emerald-400">{score} pts</span>
+                  <span>Score:</span>
+                  <span className="font-mono font-bold text-emerald-400">{score}</span>
                 </div>
                 <div className="flex justify-between text-slate-300">
-                  <span>Next Target:</span>
+                  <span>Next:</span>
                   <span className="font-bold text-amber-400">
                     {levelManager.getLevelConfig(currentLevel + 1).name}
                   </span>
@@ -587,7 +660,7 @@ export const KnifeTargetGame = ({
                   e.stopPropagation();
                   handleNextStage();
                 }}
-                className="w-full max-w-[240px] min-h-[48px] py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 active:scale-95 transition-all cursor-pointer"
+                className="w-full max-w-[210px] min-h-[46px] py-2.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 active:scale-95 transition-all cursor-pointer"
               >
                 <span>Continue</span>
                 <ArrowRight className="w-4 h-4" />
@@ -600,42 +673,48 @@ export const KnifeTargetGame = ({
           {/* ========================================================== */}
           {gameState === 'game_over' && (
             <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-30 animate-fadeIn">
-              <div className="w-16 h-16 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-3xl mb-3 shadow-lg shadow-rose-500/20">
+              <div className="w-14 h-14 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-2xl mb-2 shadow-lg shadow-rose-500/20">
                 💥
               </div>
 
-              <span className="text-xs font-black text-rose-400 uppercase tracking-widest mb-1">
+              <span className="text-xs font-black text-rose-400 uppercase tracking-widest mb-0.5">
                 Blade Clashed!
               </span>
-              <h2 className="text-2xl font-black text-white mb-4">
+              <h2 className="text-2xl font-black text-white mb-3">
                 GAME OVER
               </h2>
 
-              <div className="w-full max-w-[250px] bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-5 text-xs">
-                <div className="flex justify-between text-slate-400 mb-2">
-                  <span>Final Score:</span>
-                  <span className="font-mono font-black text-white text-sm">{score}</span>
+              <div className="w-full max-w-[240px] bg-slate-900 border border-slate-800 rounded-2xl p-3.5 mb-5 text-xs">
+                <div className="flex justify-between text-slate-400 mb-1.5">
+                  <span>Score:</span>
+                  <span className="font-mono font-black text-white text-base">{score}</span>
                 </div>
-                <div className="flex justify-between text-slate-400 mb-2">
+                <div className="flex justify-between text-slate-400 mb-1.5">
                   <span>Best Record:</span>
                   <span className="font-mono font-bold text-amber-400">{highScore}</span>
                 </div>
                 <div className="flex justify-between text-slate-400">
-                  <span>Stage Reached:</span>
-                  <span className="font-bold text-cyan-400">Stage {currentLevel}</span>
+                  <span>Apples:</span>
+                  <span className="font-mono font-bold text-rose-400 flex items-center gap-1">
+                    <img src="/games/knife-rain/apple.png" alt="" className="w-3 h-3" />
+                    {applesCount}
+                  </span>
                 </div>
               </div>
 
-              <div className="w-full max-w-[250px] flex flex-col gap-2.5">
+              <div className="w-full max-w-[240px] flex flex-col items-center gap-2.5">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleRestart();
                   }}
-                  className="w-full min-h-[48px] py-3 px-5 rounded-2xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-rose-500/30 active:scale-95 transition-all cursor-pointer"
+                  className="w-40 hover:scale-105 active:scale-95 transition-all filter drop-shadow-[0_6px_16px_rgba(34,197,94,0.5)] cursor-pointer"
                 >
-                  <RotateCcw className="w-4 h-4" />
-                  <span>Try Again</span>
+                  <img
+                    src="/games/knife-rain/btn_play.png"
+                    alt="Play Again"
+                    className="w-full h-auto object-contain"
+                  />
                 </button>
 
                 <button
@@ -643,10 +722,10 @@ export const KnifeTargetGame = ({
                     e.stopPropagation();
                     onExit();
                   }}
-                  className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs border border-slate-800 flex items-center justify-center gap-1.5 transition cursor-pointer"
+                  className="w-full min-h-[40px] py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs border border-slate-800 flex items-center justify-center gap-1.5 transition cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                  <span>Exit to Dashboard</span>
+                  <span>Dashboard</span>
                 </button>
               </div>
             </div>
@@ -657,41 +736,41 @@ export const KnifeTargetGame = ({
           {/* ========================================================== */}
           {gameState === 'victory' && (
             <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-30 animate-fadeIn">
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-400 to-yellow-500 flex items-center justify-center text-4xl mb-4 shadow-xl shadow-amber-500/30 animate-bounce">
+              <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-400 to-yellow-500 flex items-center justify-center text-3xl mb-3 shadow-xl shadow-amber-500/30 animate-bounce">
                 👑
               </div>
 
-              <span className="text-xs font-black text-amber-400 uppercase tracking-widest mb-1">
-                All 5 Boss Logs Defeated!
+              <span className="text-xs font-black text-amber-400 uppercase tracking-widest mb-0.5">
+                Robot Boss Defeated!
               </span>
-              <h2 className="text-2xl font-black text-white mb-2">
-                FOREST MASTER!
+              <h2 className="text-2xl font-black text-white mb-1">
+                KNIFE RAIN MASTER!
               </h2>
-              <p className="text-xs text-emerald-400 font-bold mb-5">
+              <p className="text-xs text-emerald-400 font-bold mb-4">
                 +{game?.winReward || 80} Demo Credits Awarded!
               </p>
 
-              <div className="w-full max-w-[250px] bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6 text-xs">
-                <div className="flex justify-between text-slate-300 mb-1.5">
+              <div className="w-full max-w-[240px] bg-slate-900 border border-slate-800 rounded-2xl p-3.5 mb-5 text-xs">
+                <div className="flex justify-between text-slate-300 mb-1">
                   <span>Grand Score:</span>
                   <span className="font-mono font-black text-emerald-400 text-base">{score}</span>
                 </div>
                 <div className="flex justify-between text-slate-300">
-                  <span>High Score:</span>
-                  <span className="font-mono font-bold text-amber-400">{highScore}</span>
+                  <span>Total Apples:</span>
+                  <span className="font-mono font-bold text-rose-400">{applesCount}</span>
                 </div>
               </div>
 
-              <div className="w-full max-w-[250px] flex flex-col gap-2.5">
+              <div className="w-full max-w-[240px] flex flex-col gap-2">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleRestart();
                   }}
-                  className="w-full min-h-[48px] py-3 px-5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-amber-500/30 active:scale-95 transition-all cursor-pointer"
+                  className="w-full min-h-[46px] py-2.5 px-4 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-amber-500/30 active:scale-95 transition-all cursor-pointer"
                 >
                   <RotateCcw className="w-4 h-4 text-slate-950" />
-                  <span>Play Master Run Again</span>
+                  <span>Play Again</span>
                 </button>
 
                 <button
@@ -699,30 +778,17 @@ export const KnifeTargetGame = ({
                     e.stopPropagation();
                     onExit();
                   }}
-                  className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs border border-slate-800 flex items-center justify-center gap-1.5 transition cursor-pointer"
+                  className="w-full min-h-[40px] py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs border border-slate-800 flex items-center justify-center gap-1.5 transition cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                  <span>Return to Dashboard</span>
+                  <span>Exit to Dashboard</span>
                 </button>
               </div>
             </div>
           )}
         </div>
-
-        {/* Bottom Platform Session Footer */}
-        <div className="px-4 py-2 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
-          <div className="flex items-center gap-1.5 truncate">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-ping" />
-            <span className="font-mono text-slate-300 truncate">
-              {session?.sessionId || 'GSESS-KNIFE'}
-            </span>
-          </div>
-          <div className="text-right">
-            <span>Entry: </span>
-            <span className="text-amber-400 font-bold">{entryFee}</span>
-          </div>
-        </div>
       </div>
     </div>
   );
 };
+

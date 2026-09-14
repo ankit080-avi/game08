@@ -1,0 +1,14 @@
+{
+  "appId": "com.game08.ludo",
+  "appName": "Ludo Classic",
+  "webDir": "dist",
+  "server": {
+    "url": "https://ankit080-avi.github.io/game08/",
+    "cleartext": false,
+    "androidScheme": "https"
+  },
+  "android": {
+    "webContentsDebuggingEnabled": true,
+    "allowMixedContent": false
+  }
+}

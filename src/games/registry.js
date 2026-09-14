@@ -76,18 +76,18 @@ export const GAME_REGISTRY = [
   },
   {
     id: 'knife-target',
-    title: 'Knife Target Hit',
-    shortName: 'Knife Target',
+    title: 'Knife Rain',
+    shortName: 'Knife Rain',
     category: 'Arcade',
-    secondaryCategories: [],
+    secondaryCategories: ['Classic'],
     entryFee: 40,
-    winReward: 75,
+    winReward: 80,
     status: 'active',
-    badge: 'Fast',
-    badgeColor: 'rose',
+    badge: 'Popular',
+    badgeColor: 'amber',
     iconName: 'Zap',
-    description: 'Arcade timing test. Tap to fling blades into the rotating timber target without striking existing knives.',
-    features: ['Rotating Log', 'Single Tap', 'Level Ramping', 'Reflex Skill']
+    description: 'Authentic Knife Rain arcade showdown. Tap to fling blades into rotating targets, slice juicy apples, and conquer the Robot Boss!',
+    features: ['Rotating Targets', 'Apple Slices', 'Boss Stages', 'Authentic Audio']
   },
   {
     id: 'tic-tac-toe',
@@ -253,6 +253,21 @@ export const GAME_REGISTRY = [
     iconName: 'Hash',
     description: 'Logic and number arrangement grid. Fill numbers 1-9 without duplicates in rows and columns.',
     features: ['Number Grid', 'Quick Logic', 'Error Checks', 'Clean Focus']
+  },
+  {
+    id: 'rummy',
+    title: 'Indian Rummy',
+    shortName: 'Rummy',
+    category: 'Classic',
+    secondaryCategories: ['Multiplayer'],
+    entryFee: 50,
+    winReward: 90,
+    status: 'active',
+    badge: 'Popular',
+    badgeColor: 'emerald',
+    iconName: 'Layers',
+    description: '13-card Indian Points Rummy in authentic RummyCircle style. Melds, pure sequences, wild jokers, and fast 1v1 showdowns!',
+    features: ['13-Card Hand', 'Cut Wild Jokers', 'Pure Sequence Check', 'Smart Auto-Sort']
   }
 ];
 

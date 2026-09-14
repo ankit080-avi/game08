@@ -32,6 +32,32 @@ h1, h2, h3, h4, h5, h6 {
   grid-template-rows: repeat(15, minmax(0, 1fr)) !important;
 }
 
+/* Explicit 15x15 Grid Placement for Ludo Home Quadrants & Center Finish */
+.ludo-quadrant-red {
+  grid-column: 1 / 7 !important;
+  grid-row: 1 / 7 !important;
+}
+
+.ludo-quadrant-green {
+  grid-column: 10 / 16 !important;
+  grid-row: 1 / 7 !important;
+}
+
+.ludo-quadrant-blue {
+  grid-column: 1 / 7 !important;
+  grid-row: 10 / 16 !important;
+}
+
+.ludo-quadrant-yellow {
+  grid-column: 10 / 16 !important;
+  grid-row: 10 / 16 !important;
+}
+
+.ludo-center-finish {
+  grid-column: 7 / 10 !important;
+  grid-row: 7 / 10 !important;
+}
+
 /* Hide scrollbar for horizontal category tabs */
 .scrollbar-none::-webkit-scrollbar {
   display: none;
@@ -69,3 +95,479 @@ h1, h2, h3, h4, h5, h6 {
 .animate-fade-in {
   animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Authentic 3D Dice Tumbling Animation */
+@keyframes diceTumble {
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(90deg) scale(1.08) translateY(-2px); }
+  50% { transform: rotate(180deg) scale(0.96) translateY(1px); }
+  75% { transform: rotate(270deg) scale(1.06) translateY(-1px); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.animate-dice-tumble {
+  animation: diceTumble 0.35s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Horizontal bounce pointing left into the dice */
+@keyframes bounceLeft {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-6px); }
+}
+
+.animate-bounce-left {
+  animation: bounceLeft 0.8s ease-in-out infinite;
+}
+
+/* 3-Cycle Soft Active Turn Pulse for Home Quadrants */
+@keyframes activeTurnPulse {
+  0% { opacity: 0; }
+  25% { opacity: 0.55; }
+  50% { opacity: 0.1; }
+  75% { opacity: 0.55; }
+  100% { opacity: 0.2; }
+}
+
+.animate-turn-pulse {
+  animation: activeTurnPulse 2.2s ease-in-out forwards;
+}
+
+/* Lingering Soft Active Quadrant Breathing Glow */
+@keyframes activeTurnBreath {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.35; }
+}
+
+.animate-turn-breath {
+  animation: activeTurnBreath 2.4s ease-in-out infinite;
+}
+
+/* Natural Cell-by-Cell Token Hopping Physics */
+@keyframes cellHop {
+  0% {
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  32% {
+    /* Lift: token rises slightly, slight scale increase, subtle direction tilt */
+    transform: translateY(-6px) scale(1.05) var(--token-tilt, rotate(0deg));
+  }
+  72% {
+    /* Touchdown: drops onto cell, slight landing compression */
+    transform: translateY(1.2px) scale(0.97) rotate(0deg);
+  }
+  100% {
+    /* Recover to neutral */
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes cellHopShadow {
+  0% {
+    transform: scale(1) translateY(0);
+    opacity: 0.55;
+    filter: blur(1.5px);
+  }
+  32% {
+    /* Lifted: shadow gets softer/smaller/more diffused as token lifts */
+    transform: scale(0.82) translateY(2px);
+    opacity: 0.3;
+    filter: blur(3.5px);
+  }
+  72% {
+    /* Touchdown: shadow contracts tight, sharp, dark */
+    transform: scale(1.06) translateY(0);
+    opacity: 0.72;
+    filter: blur(1px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 0.55;
+    filter: blur(1.5px);
+  }
+}
+
+/* Subtle Final Landing Bounce at Destination Cell */
+@keyframes cellFinalSettle {
+  0% {
+    transform: translateY(1.2px) scale(0.97);
+  }
+  40% {
+    transform: translateY(-2px) scale(1.02);
+  }
+  75% {
+    transform: translateY(0.5px) scale(0.99);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes cellFinalShadowSettle {
+  0% {
+    transform: scale(1.06);
+    opacity: 0.72;
+  }
+  40% {
+    transform: scale(0.92);
+    opacity: 0.42;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+}
+
+/* Graceful Parabolic Arc when Exiting Home Yard onto Start Square */
+@keyframes yardExitHop {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  35% {
+    transform: translateY(-12px) scale(1.12);
+  }
+  75% {
+    transform: translateY(1.5px) scale(0.96);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes yardExitShadow {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+    filter: blur(1.5px);
+  }
+  35% {
+    transform: scale(0.7) translateY(4px);
+    opacity: 0.25;
+    filter: blur(5px);
+  }
+  75% {
+    transform: scale(1.08) translateY(0);
+    opacity: 0.75;
+    filter: blur(1px);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.55;
+    filter: blur(1.5px);
+  }
+}
+
+/* Subtle Crimson Impact Pulse when a Token is Captured */
+@keyframes captureHighlight {
+  0%, 100% {
+    filter: drop-shadow(0 0 0 transparent);
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(239,68,68,0.9)) drop-shadow(0 0 16px rgba(244,63,94,0.7));
+    transform: scale(1.12);
+  }
+}
+
+.animate-cell-hop {
+  animation: cellHop var(--hop-duration, 0.125s) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.animate-cell-hop-shadow {
+  animation: cellHopShadow var(--hop-duration, 0.125s) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.animate-cell-settle {
+  animation: cellFinalSettle 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-shadow-settle {
+  animation: cellFinalShadowSettle 0.18s ease-out forwards;
+}
+
+.animate-yard-exit {
+  animation: yardExitHop var(--yard-duration, 0.28s) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.animate-yard-exit-shadow {
+  animation: yardExitShadow var(--yard-duration, 0.28s) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.animate-capture-highlight {
+  animation: captureHighlight 0.22s ease-in-out forwards;
+}
+
+/* Grounded smooth slide for captured token returning to home (no hop, no jump, no bounce) */
+.animate-token-slide {
+  transform: translateY(0) scale(1) rotate(0deg);
+}
+
+.animate-token-slide-shadow {
+  transform: scale(1) translateY(0);
+  opacity: 0.65;
+  filter: blur(1.5px);
+}
+
+/* Subtle Contextual Badge Fade In/Out (Non-blocking) */
+@keyframes badgeFade {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.95);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.95);
+  }
+}
+
+.animate-badge-fade {
+  animation: badgeFade 0.85s ease-in-out forwards;
+}
+
+/* One-time Match Start Intro Animation */
+@keyframes gameStartIntro {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.75);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.04);
+  }
+  30% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+}
+
+.animate-game-start-intro {
+  animation: gameStartIntro 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Backward compatibility */
+.animate-token-hop {
+  animation: cellHop 0.13s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Subtle Idle Floating Bounce for Actionable Dice */
+@keyframes diceIdle {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-3px) scale(1.03); }
+}
+
+.animate-dice-idle {
+  animation: diceIdle 1.4s ease-in-out infinite;
+}
+
+/* Crisp Bounce Settle when Dice Roll Finishes */
+@keyframes diceSettle {
+  0% { transform: scale(1.18) translateY(-4px); }
+  50% { transform: scale(0.96) translateY(1px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+.animate-dice-settle {
+  animation: diceSettle 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Shockwave Impact Ripple on Capture Tile */
+@keyframes captureRipple {
+  0% { transform: scale(0.4); opacity: 1; }
+  60% { transform: scale(1.6); opacity: 0.85; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+.animate-capture-ripple {
+  animation: captureRipple 0.5s ease-out forwards;
+}
+
+/* High-Impact Pop Banner for Extra Turns */
+@keyframes bannerPop {
+  0% { transform: scale(0.65) translateY(-10px); opacity: 0; }
+  60% { transform: scale(1.08) translateY(0); opacity: 1; }
+  85% { transform: scale(0.97); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-banner-pop {
+  animation: bannerPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* 3D Physical Dice Idle Floating Movement */
+@keyframes diceIdle3D {
+  0%, 100% {
+    transform: translateY(0) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1);
+  }
+  50% {
+    transform: translateY(-3.5px) rotateX(4deg) rotateY(-3deg) rotateZ(1deg) scale(1.02);
+  }
+}
+
+.animate-dice-idle-3d {
+  animation: diceIdle3D 2.2s ease-in-out infinite;
+}
+
+/* Dynamic Ground Shadow Breathing in Idle State */
+@keyframes shadowIdleBreath {
+  0%, 100% {
+    transform: translateX(-50%) scaleX(1) scaleY(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateX(-50%) scaleX(1.18) scaleY(1.15);
+    opacity: 0.28;
+  }
+}
+
+.animate-shadow-idle-3d {
+  animation: shadowIdleBreath 2.2s ease-in-out infinite;
+}
+
+/* 3D Physical Tumbling Roll Animation (X, Y, Z axis tilt & vertical elevation) */
+@keyframes diceRoll3D {
+  0% {
+    transform: translateY(0) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(0.96);
+  }
+  18% {
+    transform: translateY(-11px) rotateX(20deg) rotateY(-22deg) rotateZ(12deg) scale(1.08);
+  }
+  38% {
+    transform: translateY(-5px) rotateX(-16deg) rotateY(18deg) rotateZ(-14deg) scale(1.04);
+  }
+  58% {
+    transform: translateY(-12px) rotateX(22deg) rotateY(-18deg) rotateZ(12deg) scale(1.07);
+  }
+  78% {
+    transform: translateY(-4px) rotateX(-10deg) rotateY(10deg) rotateZ(-8deg) scale(1.02);
+  }
+  100% {
+    transform: translateY(0) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1);
+  }
+}
+
+.animate-dice-roll-3d {
+  animation: diceRoll3D 0.46s cubic-bezier(0.3, 1, 0.4, 1) infinite;
+}
+
+/* Dynamic Ground Shadow during 3D Roll */
+@keyframes shadowRoll3D {
+  0% {
+    transform: translateX(-50%) scaleX(0.9) scaleY(0.9);
+    opacity: 0.55;
+  }
+  20% {
+    transform: translateX(-50%) scaleX(1.4) scaleY(1.35);
+    opacity: 0.2;
+  }
+  40% {
+    transform: translateX(-50%) scaleX(1.1) scaleY(1.05);
+    opacity: 0.4;
+  }
+  60% {
+    transform: translateX(-50%) scaleX(1.45) scaleY(1.4);
+    opacity: 0.18;
+  }
+  80% {
+    transform: translateX(-50%) scaleX(1.05) scaleY(1);
+    opacity: 0.42;
+  }
+  100% {
+    transform: translateX(-50%) scaleX(1) scaleY(1);
+    opacity: 0.5;
+  }
+}
+
+.animate-shadow-roll-3d {
+  animation: shadowRoll3D 0.46s ease-in-out infinite;
+}
+
+/* Physical Landing Settle Bounce */
+@keyframes diceLandingSettle {
+  0% {
+    transform: translateY(-10px) rotateX(8deg) rotateY(-6deg) scale(1.1);
+  }
+  38% {
+    transform: translateY(3px) rotateX(-3deg) rotateY(2deg) scale(0.94);
+  }
+  68% {
+    transform: translateY(-2px) rotateX(1deg) rotateY(0deg) scale(1.02);
+  }
+  88% {
+    transform: translateY(1px) scale(0.99);
+  }
+  100% {
+    transform: translateY(0) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1);
+  }
+}
+
+.animate-dice-landing-3d {
+  animation: diceLandingSettle 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Ground Shadow Settle Tightening */
+@keyframes shadowLandingSettle {
+  0% {
+    transform: translateX(-50%) scaleX(1.3) scaleY(1.25);
+    opacity: 0.22;
+  }
+  38% {
+    transform: translateX(-50%) scaleX(0.85) scaleY(0.8);
+    opacity: 0.65;
+  }
+  68% {
+    transform: translateX(-50%) scaleX(1.08) scaleY(1.04);
+    opacity: 0.45;
+  }
+  100% {
+    transform: translateX(-50%) scaleX(1) scaleY(1);
+    opacity: 0.55;
+  }
+}
+
+.animate-shadow-landing-3d {
+  animation: shadowLandingSettle 0.28s ease-out forwards;
+}
+
+/* Respect Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-dice-tumble,
+  .animate-dice-idle,
+  .animate-dice-idle-3d,
+  .animate-dice-roll-3d,
+  .animate-dice-landing-3d,
+  .animate-shadow-idle-3d,
+  .animate-shadow-roll-3d,
+  .animate-shadow-landing-3d,
+  .animate-token-hop,
+  .animate-cell-hop,
+  .animate-cell-hop-shadow,
+  .animate-cell-settle,
+  .animate-shadow-settle,
+  .animate-yard-exit,
+  .animate-yard-exit-shadow,
+  .animate-capture-highlight,
+  .animate-turn-pulse,
+  .animate-turn-breath,
+  .animate-bounce-left,
+  .animate-capture-ripple,
+  .animate-banner-pop {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+
